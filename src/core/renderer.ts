@@ -1,4 +1,11 @@
 import { Color, Fog, Scene, WebGLRenderer } from 'three';
+import Stats from 'three/examples/jsm/libs/stats.module';
+
+export const mode = import.meta.env.MODE;
+export const stats = Stats();
+if (mode === 'development') {
+   document.body.appendChild(stats.dom);
+}
 
 export const sizes = {
    width: window.innerWidth,

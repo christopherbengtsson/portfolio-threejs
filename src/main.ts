@@ -1,7 +1,8 @@
 import './style.css';
-import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
+   Box3,
    Color,
    Group,
    Mesh,
@@ -9,22 +10,21 @@ import {
    PlaneGeometry,
    ShaderMaterial,
    Texture,
-   TextureLoader,
    Vector2,
 } from 'three';
 import gsap from 'gsap';
 
-import { renderer, scene } from './core/renderer';
+import { mode, renderer, scene, stats } from './core/renderer';
 import { camera, mouse, raycaster } from './core/camera';
 
 import vert from './shaders/default.vert';
 import frag from './shaders/item.frag';
 
-import { generateConfig } from './utils/generateConfig';
 import { loadAssets } from './utils/assetLoader';
+import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 
 let scrolling: boolean;
-let scrollPos: number;
+let scrollPos = 0;
 let origGridPos: any;
 let updatingPerspective = false;
 let colourChanged = false;
@@ -43,7 +43,7 @@ _assets.forEach((asset) => {
    if ((asset as Texture).image) {
       assets.textures[(asset as Texture).name] = asset as Texture;
    } else {
-      assets.fonts[(asset as any).data.familyName] = asset as Font; // TODO any
+      assets.fonts[(asset as any).data.familyName] = asset as Font;
    }
 });
 
@@ -56,28 +56,6 @@ const textMaterial = new MeshPhongMaterial({
    color: 0x1b42d8,
    emissive: 0x1b42d8,
 });
-
-const textGeometry = new TextGeometry('Education', {
-   font: assets.fonts['Schnyder L'],
-   size: 200,
-   height: 0,
-   curveSegments: 20,
-}).center();
-const text = new Mesh(textGeometry, textMaterial);
-text.position.set(-5, 0, -550);
-
-grid.add(text);
-
-const textGeometry2 = new TextGeometry('Experience', {
-   font: assets.fonts['Schnyder L'],
-   size: 200,
-   height: 0,
-   curveSegments: 20,
-}).center();
-const text2 = new Mesh(textGeometry2, textMaterial);
-text2.position.set(140, 0, -2850);
-
-grid.add(text2);
 
 interface IUniform {
    type: string;
@@ -101,63 +79,98 @@ interface IItem {
    active: boolean;
 }
 
-const items: IItem[] = [];
-let i = 0;
+const categorySections: { [key: string]: Group } = {};
+const sectionItems: { [key: string]: IItem } = {};
 
-for (let id in assets.textures) {
-   const uniforms = {
-      time: { type: 'f', value: 1.0 },
-      fogColor: { type: 'c', value: scene.fog!.color },
-      fogNear: { type: 'f', value: scene.fog!.near },
-      fogFar: { type: 'f', value: scene.fog!.far },
-      _texture: { type: 't', value: assets.textures[id] },
-      opacity: { type: 'f', value: 1.0 },
-      progress: { type: 'f', value: 0.0 },
-      gradientColor: { type: 'vec3', value: new Color(0x1b42d8) },
-   };
+let categoryIndex = 0,
+   itemIndexTotal = 0,
+   nextCategoryPos = 0;
 
-   const geometry = new PlaneGeometry(1, 1);
-   const material = new ShaderMaterial({
-      uniforms,
-      fragmentShader: frag,
-      vertexShader: vert,
-      fog: true,
-      transparent: true,
-   });
+for (const category in categoriesCommonConfig) {
+   categorySections[category] = new Group();
 
-   const mesh = new Mesh(geometry, material);
-   mesh.scale.set(400, 300, 1);
+   const textGeometry = new TextGeometry(
+      categoriesCommonConfig[category].name,
+      {
+         font: assets.fonts['Schnyder L'],
+         size: 200,
+         height: 0,
+         curveSegments: 20,
+      },
+   ).center();
 
-   const align = i % 4;
-   const pos = new Vector2();
+   const text = new Mesh(textGeometry, textMaterial);
 
-   if (align === 0) pos.set(-350, 350); // bottom left
-   if (align === 1) pos.set(350, 350); // bottom right
-   if (align === 2) pos.set(350, -350); // top right
-   if (align === 3) pos.set(-350, -350); // top left
+   let itemIndex = 0;
 
-   mesh.position.set(pos.x, pos.y, i * -300);
-   const origPos = new Vector2(pos.x, pos.y);
+   for (const id in assets.textures) {
+      const uniforms = {
+         time: { type: 'f', value: 1.0 },
+         fogColor: { type: 'c', value: scene.fog!.color },
+         fogNear: { type: 'f', value: scene.fog!.near },
+         fogFar: { type: 'f', value: scene.fog!.far },
+         _texture: { type: 't', value: assets.textures[id] },
+         opacity: { type: 'f', value: 1.0 },
+         progress: { type: 'f', value: 0.0 },
+         gradientColor: { type: 'vec3', value: new Color(0x1b42d8) },
+      };
+      const geometry = new PlaneGeometry(1, 1);
+      const material = new ShaderMaterial({
+         uniforms,
+         fragmentShader: frag,
+         vertexShader: vert,
+         fog: true,
+         transparent: true,
+      });
+      const mesh = new Mesh(geometry, material);
+      mesh.scale.set(assets.textures[id].size.x, assets.textures[id].size.y, 1);
+      // mesh.scale.set(400, 300, 1);
 
-   const item: IItem = {
-      geometry,
-      material,
-      mesh,
-      uniforms,
-      origPos,
-      active: false,
-   };
+      const align = itemIndexTotal % 4;
+      const pos = new Vector2();
 
-   mesh.onClick = () => handleItemClick(item);
+      if (align === 0) pos.set(-350, 350); // bottom left
+      if (align === 1) pos.set(350, 350); // bottom right
+      if (align === 2) pos.set(350, -350); // top right
+      if (align === 3) pos.set(-350, -350); // top left
 
-   (items[id as any] as any) = item;
-   grid.add(item.mesh);
+      mesh.position.set(pos.x, pos.y, itemIndex * -300);
+      const origPos = new Vector2(pos.x, pos.y);
 
-   i++;
+      const item = {
+         uniforms,
+         material,
+         geometry,
+         mesh,
+         origPos,
+         active: false,
+      };
+
+      item.mesh.onClick = () => handleItemClick(item);
+
+      sectionItems[id + categoryIndex] = item;
+      categorySections[category].add(mesh);
+
+      itemIndex++;
+      itemIndexTotal++;
+   }
+
+   const bbox = new Box3().setFromObject(categorySections[category]);
+
+   text.position.set(-5, 0, bbox.min.z);
+   categorySections[category].add(text);
+
+   categorySections[category].position.z = nextCategoryPos;
+   nextCategoryPos += bbox.min.z - 450; // TODO: get from camera?
+
+   categoryIndex++;
+
+   grid.add(categorySections[category]);
 }
-console.log(items);
+console.log(categorySections);
+console.log(sectionItems);
 
-function handleItemClick(item) {
+function handleItemClick(item: IItem) {
    if (item.active) {
       item.active = false;
 
@@ -180,16 +193,17 @@ function handleItemClick(item) {
          duration: 1.5,
       });
 
-      for (let x in items) {
-         if (items[x].active) continue;
+      for (const itemKey in sectionItems) {
+         if (sectionItems[itemKey].active) continue;
 
-         gsap.to(items[x].material.uniforms.opacity, {
+         gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
             value: 1,
             ease: 'Expo.easeInOut',
             duration: 1.5,
          });
       }
    } else {
+      // TODO: Repetitive code
       item.active = true;
       origGridPos = grid.position.z;
 
@@ -212,16 +226,61 @@ function handleItemClick(item) {
          duration: 1.5,
       });
 
-      for (let x in items) {
-         if (items[x].active) continue;
+      for (let itemKey in sectionItems) {
+         if (sectionItems[itemKey].active) continue;
 
-         gsap.to(items[x].material.uniforms.opacity, {
+         gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
             value: 0,
             ease: 'Expo.easeInOut',
             duration: 1.5,
          });
       }
    }
+}
+
+function mouseDown(e: MouseEvent) {
+   e.preventDefault();
+
+   mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+   mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+   raycaster.setFromCamera(mouse, camera);
+
+   const intersects = raycaster.intersectObjects(grid.children);
+
+   if (intersects.length > 0) {
+      intersects[0].object.onClick();
+   }
+}
+
+function mouseMove(e: MouseEvent) {
+   mouse.x = e.clientX / window.innerWidth - 0.5;
+   mouse.y = e.clientY / window.innerHeight - 0.5;
+   updatingPerspective = true;
+}
+
+function scroll(ev: WheelEvent) {
+   const delta = normalizeWheelDelta(ev);
+
+   scrollPos += -delta * 30;
+   scrolling = true;
+
+   function normalizeWheelDelta(e: WheelEvent) {
+      if (e.detail) {
+         if (e.deltaY)
+            return (e.deltaY / e.detail / 40) * (e.detail > 0 ? 1 : -1);
+         // Opera
+         else return -e.detail / 3; // Firefox
+      } else return e.deltaY / 120; // IE,Safari,Chrome
+   }
+}
+
+function initListeners() {
+   addEventListener('mousemove', mouseMove);
+   //    addEventListener('touchmove', mouseMove);
+   addEventListener('mousedown', mouseDown);
+
+   renderer.domElement.addEventListener('wheel', scroll);
 }
 
 function updatePerspective() {
@@ -236,9 +295,6 @@ function updatePerspective() {
 }
 
 const loop = () => {
-   // let elapsedMilliseconds = Date.now() - c.startTime
-   // items[0].uniforms.time.value = elapsedMilliseconds / 1000
-
    if (updatingPerspective) {
       updatePerspective();
       updatingPerspective = false;
@@ -246,7 +302,7 @@ const loop = () => {
 
    // smooth scrolling
    if (scrolling) {
-      let delta = (scrollPos - grid.position.z) / 12;
+      const delta = (scrollPos - grid.position.z) / 12;
       grid.position.z += delta;
 
       if (Math.abs(delta) > 0.1) {
@@ -259,8 +315,8 @@ const loop = () => {
    if (grid.position.z > 1300 && !colourChanged) {
       colourChanged = true;
 
-      let targetColor = new Color(0x012534);
-      let targetColor2 = new Color(0xfd6f53);
+      const targetColor = new Color(0x012534);
+      const targetColor2 = new Color(0xfd6f53);
 
       gsap.to(scene.fog!.color, {
          r: targetColor.r,
@@ -286,8 +342,8 @@ const loop = () => {
          duration: 3,
       });
 
-      for (let id in items) {
-         const item = items[id];
+      for (let sectionItemKey in sectionItems) {
+         const item = sectionItems[sectionItemKey];
 
          gsap.to(item.uniforms.gradientColor.value as Color, {
             r: targetColor.r,
@@ -299,42 +355,13 @@ const loop = () => {
       }
    }
 
+   if (mode === 'development') {
+      stats.update();
+   }
+
    renderer.render(scene, camera);
    requestAnimationFrame(loop);
 };
-
-function mouseDown(e: MouseEvent) {
-   e.preventDefault();
-
-   mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-   mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
-   raycaster.setFromCamera(mouse, camera);
-
-   const intersects = raycaster.intersectObjects(grid.children);
-
-   if (intersects.length > 0) {
-      intersects[0].object.onClick();
-   }
-}
-
-function mouseMove(e: MouseEvent) {
-   mouse.x = e.clientX / window.innerWidth - 0.5;
-   mouse.y = e.clientY / window.innerHeight - 0.5;
-   updatingPerspective = true;
-}
-function initListeners() {
-   addEventListener('mousemove', mouseMove);
-   //    addEventListener('touchmove', mouseMove);
-   addEventListener('mousedown', mouseDown);
-
-   renderer.domElement.addEventListener('wheel', (e) => {
-      gsap.set(grid.position, {
-         z: '+=' + e.deltaY,
-         ease: 'Power4.easeOut',
-      });
-   });
-}
 
 loop();
 initListeners();
