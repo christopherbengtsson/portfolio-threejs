@@ -21,6 +21,7 @@ import vert from './shaders/default.vert';
 import frag from './shaders/item.frag';
 
 import { generateConfig } from './utils/generateConfig';
+import { loadAssets } from './utils/assetLoader';
 
 let scrolling: boolean;
 let scrollPos: number;
@@ -35,36 +36,8 @@ let assets: {
    textures: {},
    fonts: {},
 };
-let categoryData = generateConfig();
 
-const assetLoadPromises: Promise<Texture | Font>[] = [];
-
-const imageLoader = new TextureLoader();
-imageLoader.crossOrigin = '';
-
-for (const category in categoryData) {
-   categoryData[category].data.forEach(({ filename, ...data }) => {
-      assetLoadPromises.push(
-         new Promise((resolve) => {
-            imageLoader.load(`assets/${category}/${filename}`, (texture) => {
-               texture.name = filename;
-               resolve(texture);
-            });
-         }),
-      );
-   });
-}
-
-const fontLoader = new FontLoader();
-const fonts = ['fonts/schnyder.json']; // TODO
-
-for (const font of fonts) {
-   assetLoadPromises.push(
-      new Promise((resolve) => fontLoader.load(font, (font) => resolve(font))),
-   );
-}
-
-const _assets = await Promise.all(assetLoadPromises);
+const _assets = await loadAssets();
 
 _assets.forEach((asset) => {
    if ((asset as Texture).image) {
