@@ -84,7 +84,12 @@ const textOutlineMaterial = new MeshBasicMaterial({
   transparent: true,
   wireframe: true,
 });
-const captionTextMaterial = new MeshBasicMaterial({ color: 0x1b42d8, transparent: true });
+const captionTextMaterial = new MeshBasicMaterial({
+  color: 0x1b42d8,
+  transparent: true,
+  opacity: 0,
+  visible: false,
+});
 
 interface IUniform {
   type: string;
@@ -109,6 +114,7 @@ interface IItem extends Partial<Object3D<Event>> {
   align: number;
   category: string;
   group: Group;
+  caption: Mesh;
 }
 
 const categorySections: { [key: string]: Group } = {};
@@ -251,16 +257,17 @@ function addCaption(item: IItem, data: any) {
   if (data.caption === '' && data.link === '') return;
 
   if (data.caption !== '') {
-    let captionGeom = new TextGeometry(data.caption, {
+    const captionGeom = new TextGeometry(data.caption, {
       font: assets.fonts['Schnyder L'],
       size: 18,
       height: 0,
       curveSegments: 6,
     }).center();
 
-    let caption = new Mesh(captionGeom, captionTextMaterial);
+    const caption = new Mesh(captionGeom, captionTextMaterial);
     caption.position.set(0, -item.mesh.scale.y / 2 - 50, 0);
 
+    item.caption = caption;
     item.group.add(caption);
   }
 }
@@ -309,6 +316,29 @@ function openItem(item: IItem) {
       textMaterial.visible = false;
     },
   });
+
+  gsap.to(captionTextMaterial, {
+    delay: 0.2,
+    opacity: 1,
+    ease: 'Expo.easeInOut',
+    duration: 2,
+    onStart: () => {
+      captionTextMaterial.visible = true;
+    },
+  });
+
+  if (item.caption) {
+    gsap.fromTo(
+      item.caption.position,
+      { z: -100 },
+      {
+        z: 0,
+        delay: 0.2,
+        ease: 'Expo.easeInOut',
+        duration: 2,
+      }
+    );
+  }
 
   const position = new Vector2();
 
@@ -370,6 +400,15 @@ function closeItem() {
       duration: 1.5,
       onStart: () => {
         textMaterial.visible = true;
+      },
+    });
+
+    gsap.to(captionTextMaterial, {
+      opacity: 0,
+      ease: 'Expo.easeInOut',
+      duration: 1,
+      onComplete: () => {
+        captionTextMaterial.visible = false;
       },
     });
 
