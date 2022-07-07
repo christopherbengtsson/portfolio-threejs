@@ -1,12 +1,10 @@
 import { Texture, TextureLoader, Vector2 } from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { renderer } from '../core/renderer';
-import { generateConfig } from './generateConfig';
+import { generateConfig, IAssets } from './generateConfig';
 
-export const loadAssets = () => {
-  let categoryData = generateConfig();
+export const loadAssets = (categoryData: IAssets) => {
   console.log(categoryData);
-
   const assetLoadPromises: Promise<Texture | Font>[] = [];
 
   const imageLoader = new TextureLoader();

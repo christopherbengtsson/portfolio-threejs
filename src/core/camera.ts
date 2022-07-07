@@ -21,3 +21,4 @@ raycaster.far = camera.far;
 raycaster.near = camera.near;
 
 export const mouse = new Vector2();
+export const mousePerspective = new Vector2();

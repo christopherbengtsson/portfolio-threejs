@@ -1,63 +1,63 @@
 const modules = (import.meta as any).glob('/assets/**/*');
 import { fileData } from './fileData';
-import {
-   categoriesCommonConfig,
-   ICommonConfig,
-} from './categoriesCommonConfig';
+import { categoriesCommonConfig, ICommonConfig } from './categoriesCommonConfig';
 import _merge from 'lodash.merge';
 
 interface IData {
-   filename: string;
-   caption: string;
-   link: string;
+  filename: string;
+  caption: string;
+  link: string;
 }
 interface ICategoryData {
-   [key: string]: {
-      data: IData[];
-   };
+  [key: string]: {
+    data: IData[];
+  };
 }
 export type IAssets = ICommonConfig & ICategoryData;
 
 export const generateConfig = (): IAssets => {
-   const generatedDataFromAssets: ICategoryData = {};
+  const generatedDataFromAssets: ICategoryData = {};
 
-   for (const path in modules) {
-      // /assets/category/filename.extension
+  generatedDataFromAssets['intro'] = {
+    data: [],
+  };
+  generatedDataFromAssets['end'] = {
+    data: [],
+  };
 
-      const splitPath = path.replace('/assets/', '').split('/');
-      const category = splitPath[0];
-      const filename = splitPath[1];
+  for (const path in modules) {
+    // /assets/category/filename.extension
 
-      const data: IData = {
-         filename,
-         caption: fileData[category][filename].caption,
-         link: fileData[category][filename].link,
-      };
+    const splitPath = path.replace('/assets/', '').split('/');
+    const category = splitPath[0];
+    const filename = splitPath[1];
 
-      !generatedDataFromAssets[category]
-         ? (generatedDataFromAssets[category] = {
-              data: [data],
-           })
-         : (generatedDataFromAssets[category] = {
-              data: [...generatedDataFromAssets[category].data, data],
-           });
-   }
+    const data: IData = {
+      filename,
+      caption: fileData[category][filename].caption,
+      link: fileData[category][filename].link,
+    };
 
-   const categoriesToUse = Object.keys(generatedDataFromAssets);
-   const filteredCommonConfig = Object.fromEntries(
-      Object.entries(categoriesCommonConfig).filter(([key]) =>
-         categoriesToUse.includes(key),
-      ),
-   );
+    !generatedDataFromAssets[category]
+      ? (generatedDataFromAssets[category] = {
+          data: [data],
+        })
+      : (generatedDataFromAssets[category] = {
+          data: [...generatedDataFromAssets[category].data, data],
+        });
+  }
 
-   const mergedAssets: IAssets = {};
-   _merge(mergedAssets, generatedDataFromAssets, filteredCommonConfig);
+  const categoriesToUse = Object.keys(generatedDataFromAssets);
+  const filteredCommonConfig = Object.fromEntries(
+    Object.entries(categoriesCommonConfig).filter(([key]) => categoriesToUse.includes(key))
+  );
 
-   const assets = Object.fromEntries(
-      Object.entries(mergedAssets).sort(
-         (x, y) => (x as any)[1].order - (y as any)[1].order,
-      ),
-   );
+  const mergedAssets: IAssets = {};
+  _merge(mergedAssets, generatedDataFromAssets, filteredCommonConfig);
 
-   return assets;
+  const assets = Object.fromEntries(
+    Object.entries(mergedAssets).sort((x, y) => (x as any)[1].order - (y as any)[1].order)
+  );
+
+  return assets;
 };

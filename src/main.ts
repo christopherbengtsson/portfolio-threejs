@@ -5,6 +5,7 @@ import {
   Box3,
   Color,
   Group,
+  Intersection,
   Mesh,
   MeshBasicMaterial,
   Object3D,
@@ -18,27 +19,39 @@ import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
 
 import { mode, renderer, scene, stats } from './core/renderer';
-import { camera, CAMERA_POSITION, mouse, raycaster } from './core/camera';
+import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/camera';
 
 import vert from './shaders/default.vert';
 import frag from './shaders/item.frag';
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
+import { cursor } from './core/dom';
+import { generateConfig } from './utils/generateConfig';
 
 gsap.registerPlugin(CSSRulePlugin);
+
+let controls = {
+  holdingMouseDown: false,
+  autoMoveSpeed: 0,
+};
 
 let scrolling: boolean;
 let scrollPos = 0;
 let allowScrolling = true;
-let allowPerspective = !('ontouchstart' in window);
 let stopScrollPos: number;
 let itemOpen: any = null;
+let itemAnimating = false;
 let origGridPos: any;
 let updatingPerspective = false;
 let activeCategory = 'education';
 let categoryPositions: { [key: string]: number } = {};
-let remainingCategories = [];
+let remainingCategories: string[] = [];
+
+let intersects: Intersection<Object3D<Event>>[] = [];
+
+let touchEnabled = !('ontouchstart' in window);
+if (touchEnabled) document.documentElement.classList.add('touch-enabled');
 
 let assets: {
   textures: { [key: string]: Texture };
@@ -48,7 +61,8 @@ let assets: {
   fonts: {},
 };
 
-const _assets = await loadAssets();
+const categoryData = generateConfig();
+const _assets = await loadAssets(categoryData);
 
 _assets.forEach((asset) => {
   if ((asset as Texture).image) {
@@ -70,6 +84,7 @@ const textOutlineMaterial = new MeshBasicMaterial({
   transparent: true,
   wireframe: true,
 });
+const captionTextMaterial = new MeshBasicMaterial({ color: 0x1b42d8, transparent: true });
 
 interface IUniform {
   type: string;
@@ -92,6 +107,8 @@ interface IItem extends Partial<Object3D<Event>> {
   };
   active: boolean;
   align: number;
+  category: string;
+  group: Group;
 }
 
 const categorySections: { [key: string]: Group } = {};
@@ -101,7 +118,7 @@ const sectionItemsMeshes: any[] = [];
 let itemIndexTotal = 0,
   nextCategoryPos = 0;
 
-for (const category in categoriesCommonConfig) {
+for (const category in categoryData) {
   categorySections[category] = new Group();
 
   if (category === 'intro') {
@@ -149,14 +166,15 @@ for (const category in categoriesCommonConfig) {
     categorySections[category].add(categoryName);
 
     let itemIndex = 0;
+    console.log(assets);
 
-    for (const id in assets.textures) {
+    categoryData[category].data.forEach(({ filename, ...data }) => {
       const uniforms = {
         time: { type: 'f', value: 1.0 },
         fogColor: { type: 'c', value: scene.fog!.color },
         fogNear: { type: 'f', value: scene.fog!.near },
         fogFar: { type: 'f', value: scene.fog!.far },
-        _texture: { type: 't', value: assets.textures[id] },
+        _texture: { type: 't', value: assets.textures[filename] },
         opacity: { type: 'f', value: 1.0 },
         progress: { type: 'f', value: 0.0 },
         gradientColor: { type: 'vec3', value: new Color(0x1b42d8) },
@@ -170,8 +188,7 @@ for (const category in categoriesCommonConfig) {
         transparent: true,
       });
       const mesh = new Mesh(geometry, material);
-      mesh.scale.set(assets.textures[id].size.x, assets.textures[id].size.y, 1);
-      // mesh.scale.set(400, 300, 1);
+      mesh.scale.set(assets.textures[filename].size.x, assets.textures[filename].size.y, 1);
 
       const align = itemIndexTotal % 4;
       const pos = new Vector2();
@@ -181,8 +198,11 @@ for (const category in categoriesCommonConfig) {
       if (align === 2) pos.set(350, -350); // top right
       if (align === 3) pos.set(-350, -350); // top left
 
-      mesh.position.set(pos.x, pos.y, itemIndex * -300 - 200);
       const origPos = new Vector2(pos.x, pos.y);
+
+      const group = new Group();
+      group.position.set(pos.x, pos.y, itemIndex * -300 - 200);
+      group.add(mesh);
 
       const item: IItem = {
         uniforms,
@@ -192,18 +212,20 @@ for (const category in categoriesCommonConfig) {
         origPos,
         active: false,
         align,
+        category,
+        group,
       };
 
       item.mesh.openItem = () => openItem(item);
+      addCaption(item, data);
+      sectionItems[filename] = item;
 
-      sectionItems[id] = item;
-
-      categorySections[category].add(item.mesh);
+      categorySections[category].add(item.group);
       sectionItemsMeshes.push(item.mesh);
 
       itemIndex++;
       itemIndexTotal++;
-    }
+    });
   }
 
   const bbox = new Box3().setFromObject(categorySections[category]);
@@ -224,16 +246,46 @@ for (const category in categoriesCommonConfig) {
 console.log(categorySections);
 console.log(sectionItems);
 
+function addCaption(item: IItem, data: any) {
+  // TODO fix type
+  if (data.caption === '' && data.link === '') return;
+
+  if (data.caption !== '') {
+    let captionGeom = new TextGeometry(data.caption, {
+      font: assets.fonts['Schnyder L'],
+      size: 18,
+      height: 0,
+      curveSegments: 6,
+    }).center();
+
+    let caption = new Mesh(captionGeom, captionTextMaterial);
+    caption.position.set(0, -item.mesh.scale.y / 2 - 50, 0);
+
+    item.group.add(caption);
+  }
+}
+
 function openItem(item: IItem) {
   // TODO: Repetitive code
+  itemAnimating = true;
   itemOpen = item;
   origGridPos = grid.position.z;
   allowScrolling = false;
 
-  gsap.to(item.mesh.position, {
+  let posOffset = categorySections[activeCategory].position.z;
+
+  if (item.category !== activeCategory) {
+    posOffset = categorySections[remainingCategories[remainingCategories.length - 2]].position.z;
+  }
+
+  gsap.to(item.group.position, {
     x: 0,
     y: 0,
     ease: 'Expo.easeInOut',
+    onComplete: () => {
+      itemAnimating = false;
+      cursor.dataset.cursor = 'cross';
+    },
     duration: 1.5,
   });
 
@@ -244,7 +296,7 @@ function openItem(item: IItem) {
   });
 
   gsap.to(grid.position, {
-    z: -(categorySections[activeCategory].position.z - -item.mesh.position.z) + 300,
+    z: -(posOffset - -item.group.position.z) + 300,
     ease: 'Expo.easeInOut',
     duration: 1.5,
   });
@@ -274,7 +326,7 @@ function openItem(item: IItem) {
       duration: 1.3,
     });
 
-    gsap.to(sectionItems[itemKey].mesh.position, {
+    gsap.to(sectionItems[itemKey].group.position, {
       x: position.x,
       y: position.y,
       ease: 'Expo.easeInOut',
@@ -284,8 +336,11 @@ function openItem(item: IItem) {
 }
 
 function closeItem() {
-  if (itemOpen) {
-    gsap.to(itemOpen.mesh.position, {
+  if (!itemAnimating && itemOpen) {
+    itemAnimating = true;
+    cursor.dataset.cursor = 'pointer';
+
+    gsap.to(itemOpen.group.position, {
       x: itemOpen.origPos.x,
       y: itemOpen.origPos.y,
       ease: 'Expo.easeInOut',
@@ -299,6 +354,7 @@ function closeItem() {
       onComplete: () => {
         allowScrolling = true;
         itemOpen = null;
+        itemAnimating = false;
       },
     });
 
@@ -326,7 +382,7 @@ function closeItem() {
         duration: 1.5,
       });
 
-      gsap.to(sectionItems[itemKey].mesh.position, {
+      gsap.to(sectionItems[itemKey].group.position, {
         x: sectionItems[itemKey].origPos.x,
         y: sectionItems[itemKey].origPos.y,
         ease: 'Expo.easeInOut',
@@ -351,6 +407,7 @@ function changeColours() {
     let textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
     let tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
     let svgRule = CSSRulePlugin.getRule('main svg'); // TODO: undefined?
+    let svgCursorRule = CSSRulePlugin.getRule('.cursor svg');
     let interfaceColor;
 
     gsap.to(scene.fog!.color, {
@@ -369,7 +426,7 @@ function changeColours() {
       duration: 1,
     });
 
-    gsap.to([textMaterial.color, textMaterial.emissive], {
+    gsap.to([textMaterial.color, captionTextMaterial.color], {
       r: textColor.r,
       g: textColor.g,
       b: textColor.b,
@@ -391,7 +448,7 @@ function changeColours() {
       const outlineTextColor = new Color(categoriesCommonConfig[activeCategory].outlineTextColor);
       interfaceColor = outlineTextColor.getHexString();
 
-      gsap.to([textOutlineMaterial.color, textOutlineMaterial.emissive], {
+      gsap.to([textOutlineMaterial.color], {
         r: outlineTextColor.r,
         g: outlineTextColor.g,
         b: outlineTextColor.b,
@@ -407,32 +464,73 @@ function changeColours() {
       ease: 'Power4.easeOut',
       duration: 1,
     });
+    gsap.to(svgCursorRule, {
+      cssRule: { stroke: '#' + interfaceColor },
+      ease: 'Power4.easeOut',
+      duration: 1,
+    });
   }
 }
 
 function mouseDown(e: MouseEvent) {
   e.preventDefault();
-
-  mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-  mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+  controls.holdingMouseDown = true;
 
   if (itemOpen) {
     closeItem();
   } else {
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(sectionItemsMeshes);
-
     if (intersects.length > 0) {
-      intersects[0].object?.openItem();
+      if (intersects[0].object.openItem) {
+        intersects[0].object.openItem();
+        cursor.dataset.cursor = 'cross';
+      }
+    } else {
+      cursor.dataset.cursor = 'move';
+
+      gsap.to(controls, {
+        delay: 0.7,
+        autoMoveSpeed: 20,
+        duration: 0.5,
+      });
     }
   }
 }
 
+function mouseUp() {
+  if (!itemOpen) cursor.dataset.cursor = 'pointer';
+  controls.holdingMouseDown = false;
+  gsap.killTweensOf(controls, { autoMoveSpeed: true });
+  controls.autoMoveSpeed = 0;
+}
+
 function mouseMove(e: MouseEvent) {
-  mouse.x = e.clientX / window.innerWidth - 0.5;
-  mouse.y = e.clientY / window.innerHeight - 0.5;
+  if (!itemOpen && !controls.holdingMouseDown) {
+    mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    intersects = raycaster.intersectObjects(sectionItemsMeshes);
+
+    if (intersects.length > 0) {
+      cursor.dataset.cursor = 'eye';
+    } else if (cursor.dataset.cursor !== 'pointer') {
+      cursor.dataset.cursor = 'pointer';
+    }
+  }
+
+  mousePerspective.x = e.clientX / window.innerWidth - 0.5;
+  mousePerspective.y = e.clientY / window.innerHeight - 0.5;
   updatingPerspective = true;
+
+  if (!touchEnabled) {
+    gsap.to('.cursor', {
+      x: e.clientX,
+      y: e.clientY,
+      ease: 'Power4.easeOut',
+      duration: 1.5,
+    });
+  }
 }
 
 function scroll(ev: WheelEvent) {
@@ -453,14 +551,26 @@ function scroll(ev: WheelEvent) {
 function initListeners() {
   addEventListener('mousemove', mouseMove);
   addEventListener('mousedown', mouseDown);
+  addEventListener('mouseup', mouseUp);
 
   renderer.domElement.addEventListener('wheel', scroll);
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
-    scrollPos += -gesture.velocityY! * 5;
+    scrollPos += -gesture.velocityY! * 6;
     scrolling = true;
   });
+  gesture.on('panend', (_e) => {
+    controls.autoMoveSpeed = 0;
+  });
+
+  gesture.on('longpress', (_e) => {
+    controls.autoMoveSpeed = 10;
+  });
+
+  if (!touchEnabled) {
+    cursor.dataset.cursor = 'pointer';
+  }
 }
 
 function preventPullToRefresh() {
@@ -486,19 +596,24 @@ function preventPullToRefresh() {
 
 function updatePerspective() {
   gsap.to(camera.rotation, {
-    x: -mouse.y * 0.5,
-    y: -mouse.x * 0.5,
+    x: -mousePerspective.y * 0.5,
+    y: -mousePerspective.x * 0.5,
     ease: 'Power4.easeOut',
-    duration: 3,
+    duration: 4,
   });
 
   updatingPerspective = false;
 }
 
 const loop = () => {
-  if (allowPerspective && updatingPerspective) {
+  if (touchEnabled && updatingPerspective) {
     updatePerspective();
     updatingPerspective = false;
+  }
+
+  if (controls.autoMoveSpeed > 0) {
+    scrolling = true;
+    scrollPos += controls.autoMoveSpeed;
   }
 
   // smooth scrolling
