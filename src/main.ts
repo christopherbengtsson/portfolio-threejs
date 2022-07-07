@@ -87,6 +87,7 @@ interface IItem extends Partial<Object3D<Event>> {
     gradientColor: IUniform;
   };
   active: boolean;
+  align: number;
 }
 
 const categorySections: { [key: string]: Group } = {};
@@ -187,6 +188,7 @@ for (const category in categoriesCommonConfig) {
         mesh,
         origPos,
         active: false,
+        align,
       };
 
       item.mesh.openItem = () => openItem(item);
@@ -248,11 +250,25 @@ function openItem(item: IItem) {
     },
   });
 
+  const position = new Vector2();
+
   for (let itemKey in sectionItems) {
+    if (item.align === 0) position.set(-700, 700); // bottom left
+    if (item.align === 1) position.set(700, 700); // bottom right
+    if (item.align === 2) position.set(700, -700); // top right
+    if (item.align === 3) position.set(-700, -700); // top left
+
     if (sectionItems[itemKey] === item) continue;
 
     gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
       value: 0,
+      ease: 'Expo.easeInOut',
+      duration: 1.3,
+    });
+
+    gsap.to(sectionItems[itemKey].mesh.position, {
+      x: position.x,
+      y: position.y,
       ease: 'Expo.easeInOut',
       duration: 1.5,
     });
@@ -298,6 +314,13 @@ function closeItem() {
 
       gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
         value: 1,
+        ease: 'Expo.easeInOut',
+        duration: 1.5,
+      });
+
+      gsap.to(sectionItems[itemKey].mesh.position, {
+        x: sectionItems[itemKey].origPos.x,
+        y: sectionItems[itemKey].origPos.y,
         ease: 'Expo.easeInOut',
         duration: 1.5,
       });
