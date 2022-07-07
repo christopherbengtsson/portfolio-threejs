@@ -63,6 +63,7 @@ let assets: {
   fonts: {},
 };
 
+// TODO: Cache assets
 const categoryData = generateConfig();
 const _assets = await loadAssets(categoryData);
 
@@ -679,11 +680,9 @@ function scroll(ev: WheelEvent) {
   scrolling = true;
 
   function normalizeWheelDelta(e: WheelEvent) {
-    if (e.detail) {
-      if (e.deltaY) return (e.deltaY / e.detail / 40) * (e.detail > 0 ? 1 : -1);
-      // Opera
-      else return -e.detail / 3; // Firefox
-    } else return e.deltaY / 120; // IE,Safari,Chrome
+    if (e.detail && e.deltaY) return (e.deltaY / e.detail / 40) * (e.detail > 0 ? 1 : -1); // Opera
+    else if (e.deltaY) return -e.deltaY / 60; // Firefox
+    else return e.deltaY / 120; // IE,Safari,Chrome
   }
 }
 
@@ -692,7 +691,7 @@ function initListeners() {
   addEventListener('mousedown', mouseDown);
   addEventListener('mouseup', mouseUp);
 
-  renderer.domElement.addEventListener('wheel', scroll);
+  renderer.domElement.addEventListener('wheel', scroll, false);
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
