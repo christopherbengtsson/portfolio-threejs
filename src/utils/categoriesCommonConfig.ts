@@ -25,4 +25,9 @@ export const categoriesCommonConfig: ICommonConfig = {
     bgColor: 0xfa9e00,
     tintColor: 0x373830,
   },
+  end: {
+    textColor: 0xed859c,
+    bgColor: 0x416863,
+    tintColor: 0xf81b06,
+  },
 };

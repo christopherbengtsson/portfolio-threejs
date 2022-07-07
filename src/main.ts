@@ -98,26 +98,37 @@ for (const category in categoriesCommonConfig) {
   categorySections[category] = new Group();
 
   if (category === 'intro') {
-    const introTextGeometry = new TextGeometry('Christopher Bengtsson', {
+    const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
       font: assets.fonts['Schnyder L'],
       size: 50,
       height: 0,
       curveSegments: 20,
     }).center();
 
-    const intro = new Mesh(introTextGeometry, textMaterial);
+    const intro = new Mesh(introSmallTextGeometry, textMaterial);
     categorySections[category].add(intro);
 
-    const subIntroGeometry = new TextGeometry('PORTFOLIO', {
+    const introBigTextGeometry = new TextGeometry('PORTFOLIO', {
       font: assets.fonts['Schnyder L'],
       size: 380,
       height: 0,
       curveSegments: 20,
     }).center();
 
-    const subIntroText = new Mesh(subIntroGeometry, textOutlineMaterial);
+    const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
     subIntroText.position.set(0, 0, -200);
     categorySections[category].add(subIntroText);
+  } else if (category === 'end') {
+    const endTextGeometry = new TextGeometry("Yep, that's it", {
+      font: assets.fonts['Schnyder L'],
+      size: 50,
+      height: 0,
+      curveSegments: 20,
+    }).center();
+
+    const endText = new Mesh(endTextGeometry, textOutlineMaterial);
+    endText.position.set(0, 0, -200);
+    categorySections[category].add(endText);
   } else {
     const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
       font: assets.fonts['Schnyder L'],
