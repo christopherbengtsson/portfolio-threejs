@@ -14,10 +14,11 @@ import {
   Vector2,
 } from 'three';
 import gsap from 'gsap';
+import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
 
 import { mode, renderer, scene, stats } from './core/renderer';
-import { camera, mouse, raycaster } from './core/camera';
+import { camera, CAMERA_POSITION, mouse, raycaster } from './core/camera';
 
 import vert from './shaders/default.vert';
 import frag from './shaders/item.frag';
@@ -25,10 +26,13 @@ import frag from './shaders/item.frag';
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 
+gsap.registerPlugin(CSSRulePlugin);
+
 let scrolling: boolean;
 let scrollPos = 0;
 let allowScrolling = true;
 let allowPerspective = !('ontouchstart' in window);
+let stopScrollPos: number;
 let itemOpen: any = null;
 let origGridPos: any;
 let updatingPerspective = false;
@@ -105,7 +109,7 @@ for (const category in categoriesCommonConfig) {
       font: assets.fonts['Schnyder L'],
       size: 50,
       height: 0,
-      curveSegments: 4,
+      curveSegments: 10,
     }).center();
 
     const intro = new Mesh(introSmallTextGeometry, textMaterial);
@@ -119,7 +123,7 @@ for (const category in categoriesCommonConfig) {
     }).center();
 
     const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
-    subIntroText.position.set(0, 0, -200);
+    subIntroText.position.set(0, 0, -500);
     categorySections[category].add(subIntroText);
   } else if (category === 'end') {
     const endTextGeometry = new TextGeometry("Yep, that's it", {
@@ -130,7 +134,7 @@ for (const category in categoriesCommonConfig) {
     }).center();
 
     const endText = new Mesh(endTextGeometry, textOutlineMaterial);
-    endText.position.set(0, 0, -200);
+    endText.position.set(0, 0, -300);
     categorySections[category].add(endText);
   } else {
     const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
@@ -206,9 +210,16 @@ for (const category in categoriesCommonConfig) {
 
   categorySections[category].position.z = nextCategoryPos;
   categoryPositions[category] = nextCategoryPos + 1100;
-  nextCategoryPos += bbox.min.z - (category === 'intro' ? 1300 : 800);
+
+  let positionOffset = CAMERA_POSITION;
+  if (category === 'intro') positionOffset = 1300;
+  nextCategoryPos += bbox.min.z - positionOffset;
 
   grid.add(categorySections[category]);
+
+  if (category === 'end') {
+    stopScrollPos = categorySections[category].position.z;
+  }
 }
 console.log(categorySections);
 console.log(sectionItems);
@@ -339,6 +350,8 @@ function changeColours() {
     let bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
     let textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
     let tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
+    let svgRule = CSSRulePlugin.getRule('main svg'); // TODO: undefined?
+    let interfaceColor;
 
     gsap.to(scene.fog!.color, {
       r: bgColor.r,
@@ -373,6 +386,27 @@ function changeColours() {
         duration: 1,
       });
     }
+
+    if (categoriesCommonConfig[activeCategory].outlineTextColor) {
+      const outlineTextColor = new Color(categoriesCommonConfig[activeCategory].outlineTextColor);
+      interfaceColor = outlineTextColor.getHexString();
+
+      gsap.to([textOutlineMaterial.color, textOutlineMaterial.emissive], {
+        r: outlineTextColor.r,
+        g: outlineTextColor.g,
+        b: outlineTextColor.b,
+        ease: 'Power4.easeOut',
+        duration: 1,
+      });
+    } else {
+      interfaceColor = textColor.getHexString();
+    }
+
+    gsap.to(svgRule, {
+      cssRule: { fill: '#' + interfaceColor },
+      ease: 'Power4.easeOut',
+      duration: 1,
+    });
   }
 }
 
@@ -469,6 +503,9 @@ const loop = () => {
 
   // smooth scrolling
   if (allowScrolling && scrolling) {
+    if (scrollPos <= 0) scrollPos = 0;
+    if (scrollPos >= -stopScrollPos) scrollPos = -stopScrollPos;
+
     const delta = (scrollPos - grid.position.z) / 12;
     grid.position.z += delta;
 

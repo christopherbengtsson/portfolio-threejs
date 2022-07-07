@@ -4,6 +4,7 @@ export interface ICommonConfig {
     textColor: number;
     bgColor: number;
     tintColor: number;
+    outlineTextColor?: number;
   };
 }
 
@@ -12,6 +13,7 @@ export const categoriesCommonConfig: ICommonConfig = {
     textColor: 0x1b42d8,
     bgColor: 0xaec7c3,
     tintColor: 0x1b42d8,
+    outlineTextColor: 0x1b42d8,
   },
   education: {
     name: 'EDUCATION',
@@ -29,5 +31,6 @@ export const categoriesCommonConfig: ICommonConfig = {
     textColor: 0xed859c,
     bgColor: 0x416863,
     tintColor: 0xf81b06,
+    outlineTextColor: 0xb9b4e8,
   },
 };

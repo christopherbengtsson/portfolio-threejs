@@ -1,46 +1,89 @@
 html,
 body {
-   height: 100%;
+  height: 100%;
 }
 body {
-   margin: 0;
-   overflow: hidden;
-   overscroll-behavior-y: none;
-   background-color: #dedede;
-   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior-y: none;
+  background-color: #dedede;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 body * {
-   -webkit-touch-callout: none;
-   /* iOS Safari */
-   -webkit-user-select: none;
-   /* Safari */
-   -khtml-user-select: none;
-   /* Konqueror HTML */
-   -moz-user-select: none;
-   /* Firefox */
-   -ms-user-select: none;
-   /* Internet Explorer/Edge */
-   user-select: none;
-   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 canvas {
-   position: fixed;
-   top: 0;
-   left: 0;
-   z-index: 2;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
 }
 
 .loading {
-   position: fixed;
-   top: 0;
-   left: 0;
-   display: flex;
-   width: 100%;
-   height: 100%;
-   align-items: center;
-   justify-content: center;
-   color: black;
-   font-size: 16px;
-   letter-spacing: 1px;
-   z-index: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 16px;
+  letter-spacing: 1px;
+  z-index: 1;
+}
+
+main {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+main > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #1b42d8;
+}
+
+.header-link {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 260px;
+  height: 30px;
+  pointer-events: all;
+}
+
+.social {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+}
+
+.social.social-link {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  pointer-events: all;
+}
+
+.social-link:not(:last-child) {
+  margin-right: 10px;
 }
