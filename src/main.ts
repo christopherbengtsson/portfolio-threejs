@@ -52,7 +52,7 @@ let remainingCategories: string[] = [];
 let intersects: Intersection<Object3D<Event>>[] = [];
 let linkIntersect: Intersection<Object3D<Event>>[] = [];
 
-let touchEnabled = !('ontouchstart' in window);
+let touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
 
 let assets: {
@@ -707,6 +707,7 @@ function initListeners() {
   });
 
   if (!touchEnabled) {
+    console.log('cursor', cursor)
     cursor.dataset.cursor = 'pointer';
   }
 }

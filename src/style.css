@@ -6,6 +6,7 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior-y: none;
+  cursor: none;
 }
 canvas {
   position: fixed;

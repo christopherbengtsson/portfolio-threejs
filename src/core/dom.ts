@@ -1,1 +1,1 @@
-export const cursor = document.querySelector('.cursor') as HTMLElement;
+export const cursor = document.querySelector('.cursor') as any;
