@@ -14,4 +14,10 @@ export const fileData: IFileData = {
          link: '',
       },
    },
+   experience: {
+      'nft_carbon.png': {
+         caption: 'Some awesome text',
+         link: '',
+      },
+   },
 };
