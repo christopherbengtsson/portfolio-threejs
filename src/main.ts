@@ -7,7 +7,6 @@ import {
   Group,
   Mesh,
   MeshBasicMaterial,
-  MeshPhongMaterial,
   Object3D,
   PlaneGeometry,
   ShaderMaterial,
@@ -114,9 +113,9 @@ for (const category in categoriesCommonConfig) {
 
     const introBigTextGeometry = new TextGeometry('PORTFOLIO', {
       font: assets.fonts['Schnyder L'],
-      size: 380,
+      size: 200,
       height: 0,
-      curveSegments: 15,
+      curveSegments: 4,
     }).center();
 
     const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
@@ -125,7 +124,7 @@ for (const category in categoriesCommonConfig) {
   } else if (category === 'end') {
     const endTextGeometry = new TextGeometry("Yep, that's it", {
       font: assets.fonts['Schnyder L'],
-      size: 50,
+      size: 200,
       height: 0,
       curveSegments: 4,
     }).center();
@@ -425,7 +424,7 @@ function initListeners() {
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
-    scrollPos += gesture.velocityY! * 3;
+    scrollPos += -gesture.velocityY! * 5;
     scrolling = true;
   });
 }

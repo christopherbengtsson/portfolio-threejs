@@ -18,6 +18,7 @@ export const loadAssets = () => {
         new Promise((resolve) => {
           imageLoader.load(`assets/${category}/${filename}`, (texture) => {
             texture.name = filename;
+            texture.mediaType = 'image';
             texture.size = new Vector2(texture.image.width / 2, texture.image.height / 2);
             texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
             texture.needsUpdate = true;
