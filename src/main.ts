@@ -15,6 +15,7 @@ import {
   Vector2,
 } from 'three';
 import gsap from 'gsap';
+import TinyGesture from 'tinygesture';
 
 import { mode, renderer, scene, stats } from './core/renderer';
 import { camera, mouse, raycaster } from './core/camera';
@@ -28,6 +29,8 @@ import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 let scrolling: boolean;
 let scrollPos = 0;
 let allowScrolling = true;
+let allowPerspective = !('ontouchstart' in window);
+let itemOpen: any = null;
 let origGridPos: any;
 let updatingPerspective = false;
 let activeCategory = 'education';
@@ -102,7 +105,7 @@ for (const category in categoriesCommonConfig) {
       font: assets.fonts['Schnyder L'],
       size: 50,
       height: 0,
-      curveSegments: 20,
+      curveSegments: 4,
     }).center();
 
     const intro = new Mesh(introSmallTextGeometry, textMaterial);
@@ -112,7 +115,7 @@ for (const category in categoriesCommonConfig) {
       font: assets.fonts['Schnyder L'],
       size: 380,
       height: 0,
-      curveSegments: 20,
+      curveSegments: 15,
     }).center();
 
     const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
@@ -123,7 +126,7 @@ for (const category in categoriesCommonConfig) {
       font: assets.fonts['Schnyder L'],
       size: 50,
       height: 0,
-      curveSegments: 20,
+      curveSegments: 4,
     }).center();
 
     const endText = new Mesh(endTextGeometry, textOutlineMaterial);
@@ -134,7 +137,7 @@ for (const category in categoriesCommonConfig) {
       font: assets.fonts['Schnyder L'],
       size: 200,
       height: 0,
-      curveSegments: 20,
+      curveSegments: 10,
     }).center();
 
     const categoryName = new Mesh(textGeometry, textMaterial);
@@ -174,7 +177,7 @@ for (const category in categoriesCommonConfig) {
       if (align === 2) pos.set(350, -350); // top right
       if (align === 3) pos.set(-350, -350); // top left
 
-      mesh.position.set(pos.x, pos.y, itemIndex * -300);
+      mesh.position.set(pos.x, pos.y, itemIndex * -300 - 200);
       const origPos = new Vector2(pos.x, pos.y);
 
       const item: IItem = {
@@ -186,7 +189,7 @@ for (const category in categoriesCommonConfig) {
         active: false,
       };
 
-      item.mesh.onClick = () => handleItemClick(item);
+      item.mesh.openItem = () => openItem(item);
 
       sectionItems[id + categoryIndex] = item;
 
@@ -202,7 +205,7 @@ for (const category in categoriesCommonConfig) {
 
   categorySections[category].position.z = nextCategoryPos;
   categoryPositions[category] = nextCategoryPos + 1100;
-  nextCategoryPos += Math.min(bbox.min.z, 0) - (category === 'intro' ? 1300 : 800); // TODO: get from camera?
+  nextCategoryPos += bbox.min.z - (category === 'intro' ? 1300 : 800);
 
   categoryIndex++;
 
@@ -211,13 +214,56 @@ for (const category in categoriesCommonConfig) {
 console.log(categorySections);
 console.log(sectionItems);
 
-function handleItemClick(item: IItem) {
-  if (item.active) {
-    item.active = false;
+function openItem(item: IItem) {
+  // TODO: Repetitive code
+  itemOpen = item;
+  origGridPos = grid.position.z;
+  allowScrolling = false;
 
-    gsap.to(item.mesh.position, {
-      x: item.origPos.x,
-      y: item.origPos.y,
+  gsap.to(item.mesh.position, {
+    x: 0,
+    y: 0,
+    ease: 'Expo.easeInOut',
+    duration: 1.5,
+  });
+
+  gsap.to(item.uniforms.progress, {
+    value: 1,
+    ease: 'Expo.easeInOut',
+    duration: 1.5,
+  });
+
+  gsap.to(grid.position, {
+    z: -(categorySections[activeCategory].position.z - -item.mesh.position.z) + 300,
+    ease: 'Expo.easeInOut',
+    duration: 1.5,
+  });
+
+  gsap.to(textMaterial, {
+    opacity: 0,
+    ease: 'Expo.easeInOut',
+    duration: 1,
+    onComplete: () => {
+      textMaterial.visible = false;
+    },
+  });
+
+  for (let itemKey in sectionItems) {
+    if (sectionItems[itemKey] === item) continue;
+
+    gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
+      value: 0,
+      ease: 'Expo.easeInOut',
+      duration: 1.5,
+    });
+  }
+}
+
+function closeItem() {
+  if (itemOpen) {
+    gsap.to(itemOpen.mesh.position, {
+      x: itemOpen.origPos.x,
+      y: itemOpen.origPos.y,
       ease: 'Expo.easeInOut',
       duration: 1.5,
     });
@@ -228,10 +274,11 @@ function handleItemClick(item: IItem) {
       duration: 1.5,
       onComplete: () => {
         allowScrolling = true;
+        itemOpen = null;
       },
     });
 
-    gsap.to(item.uniforms.progress, {
+    gsap.to(itemOpen.uniforms.progress, {
       value: 0,
       ease: 'Expo.easeInOut',
       duration: 1.5,
@@ -251,49 +298,6 @@ function handleItemClick(item: IItem) {
 
       gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
         value: 1,
-        ease: 'Expo.easeInOut',
-        duration: 1.5,
-      });
-    }
-  } else {
-    // TODO: Repetitive code
-    item.active = true;
-    origGridPos = grid.position.z;
-    allowScrolling = false;
-
-    gsap.to(item.mesh.position, {
-      x: 0,
-      y: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(item.uniforms.progress, {
-      value: 1,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(grid.position, {
-      z: -(categorySections[activeCategory].position.z - -item.mesh.position.z) + 100,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(textMaterial, {
-      opacity: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-      onComplete: () => {
-        textMaterial.visible = false;
-      },
-    });
-
-    for (let itemKey in sectionItems) {
-      if (sectionItems[itemKey].active) continue;
-
-      gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
-        value: 0,
         ease: 'Expo.easeInOut',
         duration: 1.5,
       });
@@ -358,12 +362,16 @@ function mouseDown(e: MouseEvent) {
   mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
-  raycaster.setFromCamera(mouse, camera);
+  if (itemOpen) {
+    closeItem();
+  } else {
+    raycaster.setFromCamera(mouse, camera);
 
-  const intersects = raycaster.intersectObjects(sectionItemsMeshes);
+    const intersects = raycaster.intersectObjects(sectionItemsMeshes);
 
-  if (intersects.length > 0) {
-    intersects[0].object?.onClick();
+    if (intersects.length > 0) {
+      intersects[0].object?.openItem();
+    }
   }
 }
 
@@ -390,10 +398,15 @@ function scroll(ev: WheelEvent) {
 
 function initListeners() {
   addEventListener('mousemove', mouseMove);
-  //    addEventListener('touchmove', mouseMove);
   addEventListener('mousedown', mouseDown);
 
   renderer.domElement.addEventListener('wheel', scroll);
+
+  const gesture = new TinyGesture(renderer.domElement, {});
+  gesture.on('panmove', (_e) => {
+    scrollPos += gesture.velocityY! * 2;
+    scrolling = true;
+  });
 }
 
 function updatePerspective() {
@@ -408,7 +421,7 @@ function updatePerspective() {
 }
 
 const loop = () => {
-  if (updatingPerspective) {
+  if (allowPerspective && updatingPerspective) {
     updatePerspective();
     updatingPerspective = false;
   }

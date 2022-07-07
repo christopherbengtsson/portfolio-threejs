@@ -18,6 +18,7 @@
   "dependencies": {
     "gsap": "^3.10.4",
     "lodash.merge": "^4.6.2",
-    "three": "^0.142.0"
+    "three": "^0.142.0",
+    "tinygesture": "^2.0.0"
   }
 }
