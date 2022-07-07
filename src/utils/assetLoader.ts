@@ -1,7 +1,9 @@
 import { Texture, TextureLoader, Vector2 } from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader';
+import { progress } from '../core/dom';
 import { renderer } from '../core/renderer';
-import { generateConfig, IAssets } from './generateConfig';
+import { IAssets } from './generateConfig';
+import { progressPromise } from './progress';
 
 export const loadAssets = (categoryData: IAssets) => {
   console.log(categoryData);
@@ -38,5 +40,10 @@ export const loadAssets = (categoryData: IAssets) => {
     );
   }
 
-  return Promise.all(assetLoadPromises);
+  return progressPromise(assetLoadPromises, update);
 };
+
+function update(completed: number, total: number) {
+  const currentProgress = Math.round((completed / total) * 100);
+  progress.innerHTML = currentProgress.toString();
+}
