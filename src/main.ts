@@ -56,6 +56,7 @@ _assets.forEach((asset) => {
 });
 
 document.body.appendChild(renderer.domElement);
+preventPullToRefresh();
 
 const grid = new Group();
 scene.add(grid);
@@ -94,8 +95,7 @@ const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
 const sectionItemsMeshes: any[] = [];
 
-let categoryIndex = 0,
-  itemIndexTotal = 0,
+let itemIndexTotal = 0,
   nextCategoryPos = 0;
 
 for (const category in categoriesCommonConfig) {
@@ -193,7 +193,7 @@ for (const category in categoriesCommonConfig) {
 
       item.mesh.openItem = () => openItem(item);
 
-      sectionItems[id + categoryIndex] = item;
+      sectionItems[id] = item;
 
       categorySections[category].add(item.mesh);
       sectionItemsMeshes.push(item.mesh);
@@ -208,8 +208,6 @@ for (const category in categoriesCommonConfig) {
   categorySections[category].position.z = nextCategoryPos;
   categoryPositions[category] = nextCategoryPos + 1100;
   nextCategoryPos += bbox.min.z - (category === 'intro' ? 1300 : 800);
-
-  categoryIndex++;
 
   grid.add(categorySections[category]);
 }
@@ -425,10 +423,31 @@ function initListeners() {
 
   renderer.domElement.addEventListener('wheel', scroll);
 
-  const gesture = new TinyGesture(renderer.domElement, {});
+  const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
-    scrollPos += gesture.velocityY! * 2;
+    scrollPos += gesture.velocityY! * 3;
     scrolling = true;
+  });
+}
+
+function preventPullToRefresh() {
+  let prevent = false;
+
+  renderer.domElement.addEventListener('touchstart', function (e) {
+    if (e.touches.length !== 1) {
+      return;
+    }
+
+    var scrollY =
+      window.pageYOffset || document.body.scrollTop || document.documentElement.scrollTop;
+    prevent = scrollY === 0;
+  });
+
+  renderer.domElement.addEventListener('touchmove', function (e) {
+    if (prevent) {
+      prevent = false;
+      e.preventDefault();
+    }
   });
 }
 
