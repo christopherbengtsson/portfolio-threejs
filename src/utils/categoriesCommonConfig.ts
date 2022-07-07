@@ -19,9 +19,9 @@ export const categoriesCommonConfig: ICommonConfig = {
   },
   education: {
     name: 'EDUCATION',
-    textColor: 0x1b42d8,
-    bgColor: 0xaec7c3,
-    tintColor: 0x1b42d8,
+    textColor: 0xfd6f53,
+    bgColor: 0x012534,
+    tintColor: 0x012534,
     order: 2,
   },
   experience: {
@@ -32,10 +32,10 @@ export const categoriesCommonConfig: ICommonConfig = {
     order: 3,
   },
   end: {
-    textColor: 0xed859c,
-    bgColor: 0x416863,
-    tintColor: 0xf81b06,
-    outlineTextColor: 0xb9b4e8,
+    textColor: 0xf81b06,
+    bgColor: 0xf2f2f2,
+    tintColor: 0xa2a2a2,
+    outlineTextColor: 0xa2a2a2,
     order: 4,
   },
 };

@@ -687,10 +687,9 @@ function scroll(ev: WheelEvent) {
 }
 
 function initListeners() {
-  addEventListener('mousemove', mouseMove);
-  addEventListener('mousedown', mouseDown);
-  addEventListener('mouseup', mouseUp);
-
+  window.addEventListener('mousemove', mouseMove, false);
+  renderer.domElement.addEventListener('mousedown', mouseDown, false);
+  renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
 
   const gesture = new TinyGesture(renderer.domElement);
@@ -707,7 +706,6 @@ function initListeners() {
   });
 
   if (!touchEnabled) {
-    console.log('cursor', cursor)
     cursor.dataset.cursor = 'pointer';
   }
 }
@@ -745,7 +743,7 @@ function updatePerspective() {
 }
 
 const loop = () => {
-  if (touchEnabled && updatingPerspective) {
+  if (!touchEnabled && updatingPerspective) {
     updatePerspective();
     updatingPerspective = false;
   }
