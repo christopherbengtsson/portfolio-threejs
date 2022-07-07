@@ -9,6 +9,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   Object3D,
+  PlaneBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
   Texture,
@@ -49,6 +50,7 @@ let categoryPositions: { [key: string]: number } = {};
 let remainingCategories: string[] = [];
 
 let intersects: Intersection<Object3D<Event>>[] = [];
+let linkIntersect: Intersection<Object3D<Event>>[] = [];
 
 let touchEnabled = !('ontouchstart' in window);
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
@@ -90,6 +92,12 @@ const captionTextMaterial = new MeshBasicMaterial({
   opacity: 0,
   visible: false,
 });
+const linkUnderlineMaterial = new MeshBasicMaterial({
+  color: 0x1b42d8,
+  transparent: true,
+  opacity: 0,
+  visible: false,
+});
 
 interface IUniform {
   type: string;
@@ -114,6 +122,10 @@ interface IItem extends Partial<Object3D<Event>> {
   align: number;
   category: string;
   group: Group;
+  linkGroup: Group;
+  link: Mesh;
+  linkUnderline: Mesh;
+  linkBox: Mesh;
   caption: Mesh;
 }
 
@@ -266,9 +278,46 @@ function addCaption(item: IItem, data: any) {
 
     const caption = new Mesh(captionGeom, captionTextMaterial);
     caption.position.set(0, -item.mesh.scale.y / 2 - 50, 0);
+    caption.visible = false;
 
     item.caption = caption;
     item.group.add(caption);
+  }
+  if (data.link !== '') {
+    item.linkGroup = new Group();
+
+    let linkGeom = new TextGeometry('SEE MORE', {
+      font: assets.fonts['Schnyder L'],
+      size: 6,
+      height: 0,
+      curveSegments: 6,
+    }).center();
+
+    item.link = new Mesh(linkGeom, captionTextMaterial);
+
+    item.linkUnderline = new Mesh(new PlaneBufferGeometry(45, 1), linkUnderlineMaterial);
+    item.linkUnderline.position.set(0, -10, 0);
+
+    // for raycasting so it doesn't just pick up on letters
+    item.linkBox = new Mesh(
+      new PlaneBufferGeometry(70, 20),
+      new MeshBasicMaterial({ alphaTest: 0, visible: false })
+    );
+    item.linkBox.onClick = () => {
+      window.open(data.link, '_blank');
+    };
+
+    item.linkGroup.position.set(
+      0,
+      item.caption ? item.caption.position.y - 40 : -item.mesh.scale.y / 2 - 50,
+      0
+    );
+    item.linkGroup.visible = false;
+
+    item.linkGroup.add(item.link);
+    item.linkGroup.add(item.linkUnderline);
+    item.linkGroup.add(item.linkBox);
+    item.group.add(item.linkGroup);
   }
 }
 
@@ -318,12 +367,22 @@ function openItem(item: IItem) {
   });
 
   gsap.to(captionTextMaterial, {
-    delay: 0.2,
+    delay: 0.3,
     opacity: 1,
     ease: 'Expo.easeInOut',
     duration: 2,
     onStart: () => {
       captionTextMaterial.visible = true;
+    },
+  });
+
+  gsap.to(linkUnderlineMaterial, {
+    opacity: 0.4,
+    ease: 'Expo.easeInOut',
+    delay: 0.3,
+    duration: 2,
+    onStart: () => {
+      linkUnderlineMaterial.visible = true;
     },
   });
 
@@ -336,6 +395,25 @@ function openItem(item: IItem) {
         delay: 0.2,
         ease: 'Expo.easeInOut',
         duration: 2,
+        onStart: () => {
+          item.caption.visible = true;
+        },
+      }
+    );
+  }
+
+  if (item.linkGroup) {
+    gsap.fromTo(
+      item.linkGroup.position,
+      { z: -100 },
+      {
+        z: 0,
+        delay: 0.3,
+        ease: 'Expo.easeInOut',
+        duration: 2,
+        onStart: () => {
+          item.linkGroup.visible = true;
+        },
       }
     );
   }
@@ -360,7 +438,7 @@ function openItem(item: IItem) {
       x: position.x,
       y: position.y,
       ease: 'Expo.easeInOut',
-      duration: 1.5,
+      duration: 1.3,
     });
   }
 }
@@ -403,12 +481,15 @@ function closeItem() {
       },
     });
 
-    gsap.to(captionTextMaterial, {
+    gsap.to([captionTextMaterial, linkUnderlineMaterial], {
       opacity: 0,
       ease: 'Expo.easeInOut',
       duration: 1,
       onComplete: () => {
         captionTextMaterial.visible = false;
+        linkUnderlineMaterial.visible = false;
+        if (itemOpen.caption) itemOpen.caption.visible = false;
+        if (itemOpen.linkGroup) itemOpen.linkGroup.visible = false;
       },
     });
 
@@ -516,7 +597,11 @@ function mouseDown(e: MouseEvent) {
   controls.holdingMouseDown = true;
 
   if (itemOpen) {
-    closeItem();
+    if (linkIntersect.length > 0) {
+      if (linkIntersect[0].object.onClick) linkIntersect[0].object.onClick();
+    } else {
+      closeItem();
+    }
   } else {
     if (intersects.length > 0) {
       if (intersects[0].object.openItem) {
@@ -555,6 +640,21 @@ function mouseMove(e: MouseEvent) {
       cursor.dataset.cursor = 'eye';
     } else if (cursor.dataset.cursor !== 'pointer') {
       cursor.dataset.cursor = 'pointer';
+    }
+  }
+
+  if (itemOpen && itemOpen.linkBox) {
+    mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
+
+    if (linkIntersect.length > 0) {
+      cursor.dataset.cursor = 'eye';
+    } else if (cursor.dataset.cursor !== 'cross') {
+      cursor.dataset.cursor = 'cross';
     }
   }
 
