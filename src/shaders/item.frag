@@ -12,13 +12,13 @@ uniform float progress;
 void main() {
 
 	vec2 uv = vUv;
-	// vec4 color = texture2D( _texture, vUv );
 
 	vec4 origColor = texture2D(_texture, vUv);
     float grayscaleValue = dot(origColor.rgb, vec3(0.299, 0.587, 0.114));
 
-	gl_FragColor = mix( mix(vec4( gradientColor, 1.0), vec4(1.0, 1.0, 1.0, 1.0), grayscaleValue), origColor, progress ) * opacity;
+	vec4 gradientImage = mix(vec4( gradientColor, 1.0), vec4(1.0, 1.0, 1.0, 1.0), grayscaleValue);
 
+	gl_FragColor = mix( vec4( gradientImage.rgb, 0. ), mix( gradientImage, origColor, progress ), opacity );
 
 	#ifdef USE_FOG
 		#ifdef USE_LOGDEPTHBUF_EXT

@@ -7,7 +7,7 @@ import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
     font: fonts['Schnyder L'],
-    size: 50,
+    size: 60,
     height: 0,
     curveSegments: 10,
   }).center();
@@ -15,9 +15,9 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const intro = new Mesh(introSmallTextGeometry, textMaterial);
   //   categorySections[category].add(intro);
 
-  const introBigTextGeometry = new TextGeometry('PORTFOLIO', {
+  const introBigTextGeometry = new TextGeometry('1337', {
     font: fonts['Schnyder L'],
-    size: 200,
+    size: 640,
     height: 0,
     curveSegments: 4,
   }).center();

@@ -1,17 +1,10 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
   Box3,
   Color,
-  Fog,
   Group,
   Intersection,
-  Mesh,
-  MeshBasicMaterial,
-  PlaneBufferGeometry,
-  PlaneGeometry,
-  ShaderMaterial,
   Texture,
   Vector2,
 } from 'three';
@@ -125,7 +118,7 @@ for (const category in categoryData) {
   categoryPositions[category] = nextCategoryPos + 1100;
 
   let positionOffset = CAMERA_POSITION;
-  if (category === 'intro') positionOffset = 1300;
+  if (category === 'intro') positionOffset = 1700;
   nextCategoryPos += bbox.min.z - positionOffset;
 
   grid.add(categorySections[category]);
