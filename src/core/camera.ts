@@ -6,7 +6,7 @@ const FOV = (180 * (2 * Math.atan(sizes.height / 2 / CAMERA_POSITION))) / Math.P
 
 export const camera = new PerspectiveCamera(FOV, sizes.width / sizes.height, 1);
 camera.lookAt(scene.position);
-camera.position.z = CAMERA_POSITION;
+camera.position.set(0, 2000, CAMERA_POSITION);
 
 window.addEventListener('resize', () => {
   sizes.width = window.innerWidth;

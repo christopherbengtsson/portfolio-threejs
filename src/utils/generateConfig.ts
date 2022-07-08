@@ -1,19 +1,8 @@
 const modules = (import.meta as any).glob('/assets/**/*');
 import { fileData } from './fileData';
-import { categoriesCommonConfig, ICommonConfig } from './categoriesCommonConfig';
+import { categoriesCommonConfig } from './categoriesCommonConfig';
 import _merge from 'lodash.merge';
-
-interface IData {
-  filename: string;
-  caption: string;
-  link: string;
-}
-interface ICategoryData {
-  [key: string]: {
-    data: IData[];
-  };
-}
-export type IAssets = ICommonConfig & ICategoryData;
+import { IAssets, ICategoryData, IData } from '../types';
 
 export const generateConfig = (): IAssets => {
   const generatedDataFromAssets: ICategoryData = {};

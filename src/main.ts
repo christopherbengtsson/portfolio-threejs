@@ -1,14 +1,14 @@
-import './style.css';
+import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
   Box3,
   Color,
+  Fog,
   Group,
   Intersection,
   Mesh,
   MeshBasicMaterial,
-  Object3D,
   PlaneBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
@@ -21,6 +21,12 @@ import TinyGesture from 'tinygesture';
 
 import { mode, renderer, scene, stats } from './core/renderer';
 import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/camera';
+import {
+  textMaterial,
+  textOutlineMaterial,
+  captionTextMaterial,
+  linkUnderlineMaterial,
+} from './core/materials';
 
 import vert from './shaders/default.vert';
 import frag from './shaders/item.frag';
@@ -29,6 +35,7 @@ import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 import { cursor } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
+import { IItem, IObject3D } from './types';
 
 gsap.registerPlugin(CSSRulePlugin);
 
@@ -36,7 +43,6 @@ let controls = {
   holdingMouseDown: false,
   autoMoveSpeed: 0,
 };
-
 let scrolling: boolean;
 let scrollPos = 0;
 let allowScrolling = true;
@@ -46,27 +52,31 @@ let itemAnimating = false;
 let origGridPos: any;
 let updatingPerspective = false;
 let activeCategory = 'education';
-let categoryPositions: { [key: string]: number } = {};
 let remainingCategories: string[] = [];
+let intersects: Intersection<IObject3D>[] = [];
+let linkIntersect: Intersection<IObject3D>[] = [];
 
-let intersects: Intersection<Object3D<Event>>[] = [];
-let linkIntersect: Intersection<Object3D<Event>>[] = [];
-
-let touchEnabled = 'ontouchstart' in window;
+const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
-
-let assets: {
-  textures: { [key: string]: Texture };
+const categoryPositions: { [key: string]: number } = {};
+interface TextureWProps extends Texture {
+  size?: {
+    x: number;
+    y: number;
+  };
+}
+const assets: {
+  textures: { [key: string]: TextureWProps };
   fonts: { [key: string]: Font };
 } = {
   textures: {},
   fonts: {},
 };
 
-// TODO: Cache assets
+// TODO: Cache assets and timeout for loader
 const categoryData = generateConfig();
+setTimeout(async () => {}, 3000);
 const _assets = await loadAssets(categoryData);
-
 _assets.forEach((asset) => {
   if ((asset as Texture).image) {
     assets.textures[(asset as Texture).name] = asset as Texture;
@@ -74,61 +84,11 @@ _assets.forEach((asset) => {
     assets.fonts[(asset as any).data.familyName] = asset as Font;
   }
 });
-
 document.body.appendChild(renderer.domElement);
 preventPullToRefresh();
 
 const grid = new Group();
 scene.add(grid);
-
-const textMaterial = new MeshBasicMaterial({ color: 0x1b42d8, transparent: true });
-const textOutlineMaterial = new MeshBasicMaterial({
-  color: 0x1b42d8,
-  transparent: true,
-  wireframe: true,
-});
-const captionTextMaterial = new MeshBasicMaterial({
-  color: 0x1b42d8,
-  transparent: true,
-  opacity: 0,
-  visible: false,
-});
-const linkUnderlineMaterial = new MeshBasicMaterial({
-  color: 0x1b42d8,
-  transparent: true,
-  opacity: 0,
-  visible: false,
-});
-
-interface IUniform {
-  type: string;
-  value: number | Color | Texture;
-}
-interface IItem extends Partial<Object3D<Event>> {
-  geometry: PlaneGeometry;
-  material: ShaderMaterial;
-  mesh: Mesh;
-  origPos: Vector2;
-  uniforms: {
-    time: IUniform;
-    fogColor: IUniform;
-    fogNear: IUniform;
-    fogFar: IUniform;
-    _texture: IUniform;
-    opacity: IUniform;
-    progress: IUniform;
-    gradientColor: IUniform;
-  };
-  active: boolean;
-  align: number;
-  category: string;
-  group: Group;
-  linkGroup: Group;
-  link: Mesh;
-  linkUnderline: Mesh;
-  linkBox: Mesh;
-  caption: Mesh;
-}
 
 const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
@@ -190,9 +150,9 @@ for (const category in categoryData) {
     categoryData[category].data.forEach(({ filename, ...data }) => {
       const uniforms = {
         time: { type: 'f', value: 1.0 },
-        fogColor: { type: 'c', value: scene.fog!.color },
-        fogNear: { type: 'f', value: scene.fog!.near },
-        fogFar: { type: 'f', value: scene.fog!.far },
+        fogColor: { type: 'c', value: (scene.fog as Fog).color },
+        fogNear: { type: 'f', value: (scene.fog as Fog).near },
+        fogFar: { type: 'f', value: (scene.fog as Fog).far },
         _texture: { type: 't', value: assets.textures[filename] },
         opacity: { type: 'f', value: 1.0 },
         progress: { type: 'f', value: 0.0 },
@@ -203,11 +163,10 @@ for (const category in categoryData) {
         uniforms,
         fragmentShader: frag,
         vertexShader: vert,
-        fog: true,
         transparent: true,
       });
       const mesh = new Mesh(geometry, material);
-      mesh.scale.set(assets.textures[filename].size.x, assets.textures[filename].size.y, 1);
+      mesh.scale.set(assets.textures[filename].size!.x, assets.textures[filename].size!.y, 1);
 
       const align = itemIndexTotal % 4;
       const pos = new Vector2();
@@ -235,7 +194,7 @@ for (const category in categoryData) {
         group,
       };
 
-      item.mesh.openItem = () => openItem(item);
+      item.mesh.onClick = () => openItem(item);
       addCaption(item, data);
       sectionItems[filename] = item;
 
@@ -397,7 +356,7 @@ function openItem(item: IItem) {
         ease: 'Expo.easeInOut',
         duration: 2,
         onStart: () => {
-          item.caption.visible = true;
+          item.caption!.visible = true;
         },
       }
     );
@@ -413,7 +372,7 @@ function openItem(item: IItem) {
         ease: 'Expo.easeInOut',
         duration: 2,
         onStart: () => {
-          item.linkGroup.visible = true;
+          item.linkGroup!.visible = true;
         },
       }
     );
@@ -605,8 +564,8 @@ function mouseDown(e: MouseEvent) {
     }
   } else {
     if (intersects.length > 0) {
-      if (intersects[0].object.openItem) {
-        intersects[0].object.openItem();
+      if (intersects[0].object.onClick) {
+        intersects[0].object.onClick();
         cursor.dataset.cursor = 'cross';
       }
     } else {
@@ -688,9 +647,12 @@ function scroll(ev: WheelEvent) {
 
 function initListeners() {
   window.addEventListener('mousemove', mouseMove, false);
+
   renderer.domElement.addEventListener('mousedown', mouseDown, false);
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
+
+  document.querySelector('.enter')?.addEventListener('click', moveToStart, false);
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
@@ -780,3 +742,21 @@ const loop = () => {
 
 loop();
 initListeners();
+document.body.classList.add('ready');
+
+function moveToStart() {
+  gsap.to(camera.position, {
+    y: 0,
+    ease: 'Expo.easeInOut',
+    duration: 2,
+  });
+
+  gsap.to('.loading', {
+    y: '-100%',
+    ease: 'Expo.easeInOut',
+    duration: 2,
+    onComplete() {
+      (document.querySelector('.loading') as HTMLElement).style.display = 'none';
+    },
+  });
+}

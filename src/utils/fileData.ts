@@ -1,11 +1,4 @@
-export interface IFileData {
-  [category: string]: {
-    [filename: string]: {
-      caption: string;
-      link: string;
-    };
-  };
-}
+import { IFileData } from '../types';
 
 export const fileData: IFileData = {
   education: {
