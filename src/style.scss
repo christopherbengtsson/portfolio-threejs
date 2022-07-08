@@ -8,6 +8,7 @@ body {
   overflow: hidden;
   overscroll-behavior-y: none;
   background-color: #aec7c3;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   * {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -16,6 +17,7 @@ body {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
 }
 
@@ -24,6 +26,12 @@ canvas {
   top: 0;
   left: 0;
   z-index: 2;
+}
+
+.ready .loading .progress-percent {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0);
 }
 
 .loading {
@@ -50,25 +58,34 @@ canvas {
     width: 80px;
     height: 12px;
     margin-bottom: 30px;
-    margin-top: 70px;
+    margin-top: 30px;
     opacity: 0;
-    animation: fadeInUp 3s cubic-bezier(0.77, 0, 0.175, 1);
+    animation: scaleUp 3s cubic-bezier(0.19, 1, 0.22, 1);
     animation-fill-mode: forwards;
+
+    @media screen and (min-width: 500px) {
+      margin-top: 70px;
+    }
   }
 
   h1 {
-    max-width: 840px;
-    margin: 0 auto 90px;
-    font-size: 26px;
+    max-width: 820px;
+    margin: 0 auto 30px;
+    font-size: 20px;
     line-height: 1.2;
     padding: 0 80px;
     opacity: 0;
-    animation: fadeInUpSmall 3s cubic-bezier(0.77, 0, 0.175, 1);
-    animation-delay: 1s;
+    animation: scaleUp 3s cubic-bezier(0.19, 1, 0.22, 1);
     animation-fill-mode: forwards;
+
+    @media screen and (min-width: 400px) {
+      font-size: 26px;
+      margin: 0 auto 90px;
+    }
 
     @media screen and (min-width: 750px) {
       font-size: 36px;
+      margin: 0 auto 90px;
     }
   }
 
@@ -80,19 +97,17 @@ canvas {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    animation: scaleUp 2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    animation-delay: 2.5s;
+    animation: scaleUp 3s cubic-bezier(0.19, 1, 0.22, 1);
+    animation-delay: 0.5s;
     animation-fill-mode: forwards;
+
+    .ready &:hover .progress-circle {
+      transform: scale(0.8);
+    }
   }
 
   .progress-percent {
     font-size: 30px;
-
-    .ready & {
-      opacity: 0;
-      visibility: hidden;
-      transform: scale(0);
-    }
   }
 
   .enter {
@@ -121,7 +136,7 @@ canvas {
   .progress-percent,
   .enter,
   .loading-text svg {
-    transition-property: opacity visibility transform;
+    transition-property: opacity, visibility, transform;
     transition-duration: 0.6s;
     transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.85);
   }
@@ -132,6 +147,9 @@ canvas {
     position: absolute;
     top: 0;
     left: 0;
+    transition-property: transform;
+    transition-duration: 1s;
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
 
     svg {
       fill: none;
@@ -176,6 +194,7 @@ svg {
   display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
 main {
@@ -184,7 +203,7 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 3;
+  z-index: 7;
   pointer-events: none;
 
   svg {
@@ -196,51 +215,22 @@ main {
   position: absolute;
   top: 15px;
   left: 15px;
-  width: 260px;
-  height: 30px;
+  width: 190px;
+  height: 22px;
   pointer-events: all;
-}
+  transform: translateY(-60px);
 
-.say-hello {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 96px;
-  height: 12px;
-  pointer-events: all;
-
-  &:after {
-    content: '';
-    display: block;
-    position: absolute;
-    bottom: -10px;
-    padding-top: 10px;
-    width: 100%;
-    height: 2px;
-    border-bottom: 2px solid rgba(#1b42d8, 0.3);
+  @media screen and (min-width: 750px) {
+    width: 260px;
+    height: 30px;
   }
-}
-
-.left,
-.right {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 12px;
-}
-
-.left {
-  left: 15px;
-}
-
-.right {
-  right: 15px;
 }
 
 .social {
   position: absolute;
   bottom: 15px;
   right: 15px;
+  transform: translateY(80px);
 
   .social-link {
     display: inline-block;
@@ -253,17 +243,17 @@ main {
     }
   }
 }
-
 .cursor {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 10;
-  transform: translate(0px, 0px);
+  transform: translate(-100px, -100px);
   pointer-events: none;
+  display: none;
 
-  .touch-enabled & {
-    display: none;
+  .enable-cursor & {
+    display: block;
   }
 
   &[data-cursor='pointer'] {
@@ -303,13 +293,6 @@ main {
     }
   }
 
-  svg {
-    fill: none;
-    stroke: #1b42d8;
-    stroke-miterlimit: 10;
-    stroke-width: 12px;
-  }
-
   > div {
     position: absolute;
     top: 50%;
@@ -317,7 +300,7 @@ main {
     transform: translate(-50%, -50%) scale(0);
     transition-duration: 0.6s;
     transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.85);
-    transition-property: opacity transform;
+    transition-property: opacity, transform;
   }
 
   .pointer {
@@ -380,49 +363,11 @@ main {
 @keyframes scaleUp {
   0% {
     opacity: 0;
-    transform: scale(0);
-  }
-
-  60% {
-    transform: scale(1.1);
-  }
-
-  80% {
-    transform: scale(0.9);
+    transform: scale(0.4);
   }
 
   100% {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes fadeInUp {
-  0% {
-    transform: translate3d(0, 150%, 0);
-  }
-
-  20% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes fadeInUpSmall {
-  0% {
-    transform: translate3d(0, 50%, 0);
-  }
-
-  20% {
-    opacity: 0;
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
 }
