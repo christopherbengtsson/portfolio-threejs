@@ -70,6 +70,7 @@ export interface IFileData {
   };
 }
 export interface IData {
+  filepath: string;
   filename: string;
   caption: string;
   link: string;

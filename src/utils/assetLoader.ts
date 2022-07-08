@@ -13,25 +13,27 @@ export const loadAssets = (categoryData: IAssets) => {
   imageLoader.crossOrigin = '';
 
   for (const category in categoryData) {
-    categoryData[category].data.forEach(({ filename }: { filename: string }) => {
-      assetLoadPromises.push(
-        new Promise((resolve) => {
-          imageLoader.load(`assets/${category}/${filename}`, (texture) => {
-            texture.name = filename;
-            (texture as ITexture).mediaType = 'image';
-            (texture as ITexture).size = new Vector2(
-              texture.image.width / 2,
-              texture.image.height / 2
-            );
-            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-            texture.needsUpdate = true;
-            renderer.initTexture(texture);
+    categoryData[category].data.forEach(
+      ({ filepath, filename }: { filename: string; filepath: string }) => {
+        assetLoadPromises.push(
+          new Promise((resolve) => {
+            imageLoader.load(filepath, (texture) => {
+              texture.name = filename;
+              (texture as ITexture).mediaType = 'image';
+              (texture as ITexture).size = new Vector2(
+                texture.image.width / 2,
+                texture.image.height / 2
+              );
+              texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+              texture.needsUpdate = true;
+              renderer.initTexture(texture);
 
-            resolve(texture);
-          });
-        })
-      );
-    });
+              resolve(texture);
+            });
+          })
+        );
+      }
+    );
   }
 
   const fontLoader = new FontLoader();

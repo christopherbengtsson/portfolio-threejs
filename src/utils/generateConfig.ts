@@ -1,8 +1,19 @@
-const modules = (import.meta as any).glob('/assets/**/*');
+const modules = import.meta.globEager('/assets/**/*', { as: 'url' });
 import { fileData } from './fileData';
 import { categoriesCommonConfig } from './categoriesCommonConfig';
 import _merge from 'lodash.merge';
 import { IAssets, ICategoryData, IData } from '../types';
+import { mode } from '../core/renderer';
+
+function assetUrl(name: string): string {
+  const s = Object.keys(modules).find((path) => path.endsWith(name));
+  return modules[s!]?.default;
+}
+
+function splitPath(path: string) {
+  const knownPath = path.match(/.+?(?=assets\/)/)![0];
+  return path.replace(knownPath, '').replace('assets/', '').split('/');
+}
 
 export const generateConfig = (): IAssets => {
   const generatedDataFromAssets: ICategoryData = {};
@@ -15,14 +26,17 @@ export const generateConfig = (): IAssets => {
   };
 
   for (const path in modules) {
-    // /assets/category/filename.extension
+    const filepath = assetUrl(path);
+    const prodSplit = splitPath(filepath);
+    const devSplit = splitPath(path);
 
-    const splitPath = path.replace('/assets/', '').split('/');
-    const category = splitPath[0];
-    const filename = splitPath[1];
+    const category = devSplit[0];
+    const chunkedFilename = mode === 'production' ? prodSplit[0] : devSplit[1];
+    const filename = devSplit[1];
 
     const data: IData = {
-      filename,
+      filepath,
+      filename: chunkedFilename,
       caption: fileData[category][filename].caption,
       link: fileData[category][filename].link,
     };
@@ -47,6 +61,6 @@ export const generateConfig = (): IAssets => {
   const assets = Object.fromEntries(
     Object.entries(mergedAssets).sort((x, y) => (x as any)[1].order - (y as any)[1].order)
   );
-
+  console.log('ASSETS', assets);
   return assets;
 };
