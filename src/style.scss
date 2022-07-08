@@ -8,7 +8,6 @@ body {
   overflow: hidden;
   overscroll-behavior-y: none;
   background-color: #aec7c3;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   * {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -17,7 +16,6 @@ body {
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* Internet Explorer/Edge */
     user-select: none;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   }
 }
 
@@ -243,6 +241,7 @@ main {
     }
   }
 }
+
 .cursor {
   position: absolute;
   top: 0;
@@ -250,10 +249,9 @@ main {
   z-index: 10;
   transform: translate(-100px, -100px);
   pointer-events: none;
-  display: none;
 
-  .enable-cursor & {
-    display: block;
+  .touch-enabled & {
+    display: none;
   }
 
   &[data-cursor='pointer'] {
@@ -291,6 +289,13 @@ main {
         }
       }
     }
+  }
+
+  svg {
+    fill: none;
+    stroke: #1b42d8;
+    stroke-miterlimit: 10;
+    stroke-width: 12px;
   }
 
   > div {
@@ -363,11 +368,49 @@ main {
 @keyframes scaleUp {
   0% {
     opacity: 0;
-    transform: scale(0.4);
+    transform: scale(0);
+  }
+
+  60% {
+    transform: scale(1.1);
+  }
+
+  80% {
+    transform: scale(0.9);
   }
 
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    transform: translate3d(0, 150%, 0);
+  }
+
+  20% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fadeInUpSmall {
+  0% {
+    transform: translate3d(0, 50%, 0);
+  }
+
+  20% {
+    opacity: 0;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
   }
 }
