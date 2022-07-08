@@ -8,6 +8,7 @@ import {
   Vector2,
   Group,
 } from 'three';
+import { Font } from 'three/examples/jsm/loaders/FontLoader';
 
 type onClick = () => void;
 export interface IObject3D extends Object3D<Event> {
@@ -81,3 +82,17 @@ export interface ICategoryData {
   };
 }
 export type IAssets = ICommonConfig & ICategoryData;
+
+export interface TextureWProps extends Texture {
+  size?: {
+    x: number;
+    y: number;
+  };
+}
+
+export type TFonts = { [key: string]: Font };
+export type TTextures = { [key: string]: TextureWProps };
+export interface ITexturesAndFonts {
+  textures: TTextures;
+  fonts: TFonts;
+}

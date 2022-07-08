@@ -28,14 +28,13 @@ import {
   linkUnderlineMaterial,
 } from './core/materials';
 
-import vert from './shaders/default.vert';
-import frag from './shaders/item.frag';
-
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 import { cursor } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
-import { IItem, IObject3D } from './types';
+import { IItem, IObject3D, ITexturesAndFonts } from './types';
+import { createEndSection, createGenericSection, createIntroSection } from './category';
+import { createSectionItems } from './sectionItems';
 
 gsap.registerPlugin(CSSRulePlugin);
 
@@ -59,29 +58,20 @@ let linkIntersect: Intersection<IObject3D>[] = [];
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
 const categoryPositions: { [key: string]: number } = {};
-interface TextureWProps extends Texture {
-  size?: {
-    x: number;
-    y: number;
-  };
-}
-const assets: {
-  textures: { [key: string]: TextureWProps };
-  fonts: { [key: string]: Font };
-} = {
+
+const texturesAndFonts: ITexturesAndFonts = {
   textures: {},
   fonts: {},
 };
 
 // TODO: Cache assets and timeout for loader
 const categoryData = generateConfig();
-setTimeout(async () => {}, 3000);
 const _assets = await loadAssets(categoryData);
 _assets.forEach((asset) => {
   if ((asset as Texture).image) {
-    assets.textures[(asset as Texture).name] = asset as Texture;
+    texturesAndFonts.textures[(asset as Texture).name] = asset as Texture;
   } else {
-    assets.fonts[(asset as any).data.familyName] = asset as Font;
+    texturesAndFonts.fonts[(asset as any).data.familyName] = asset as Font;
   }
 });
 document.body.appendChild(renderer.domElement);
@@ -101,101 +91,24 @@ for (const category in categoryData) {
   categorySections[category] = new Group();
 
   if (category === 'intro') {
-    const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
-      font: assets.fonts['Schnyder L'],
-      size: 50,
-      height: 0,
-      curveSegments: 10,
-    }).center();
-
-    const intro = new Mesh(introSmallTextGeometry, textMaterial);
-    categorySections[category].add(intro);
-
-    const introBigTextGeometry = new TextGeometry('PORTFOLIO', {
-      font: assets.fonts['Schnyder L'],
-      size: 200,
-      height: 0,
-      curveSegments: 4,
-    }).center();
-
-    const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
-    subIntroText.position.set(0, 0, -500);
-    categorySections[category].add(subIntroText);
+    categorySections[category].add(...createIntroSection(texturesAndFonts));
   } else if (category === 'end') {
-    const endTextGeometry = new TextGeometry("Yep, that's it", {
-      font: assets.fonts['Schnyder L'],
-      size: 200,
-      height: 0,
-      curveSegments: 4,
-    }).center();
-
-    const endText = new Mesh(endTextGeometry, textOutlineMaterial);
-    endText.position.set(0, 0, -300);
-    categorySections[category].add(endText);
+    categorySections[category].add(...createEndSection(texturesAndFonts));
   } else {
-    const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
-      font: assets.fonts['Schnyder L'],
-      size: 200,
-      height: 0,
-      curveSegments: 10,
-    }).center();
-
-    const categoryName = new Mesh(textGeometry, textMaterial);
-    categoryName.position.set(0, 0, 0);
-    categorySections[category].add(categoryName);
+    categorySections[category].add(...createGenericSection(category, texturesAndFonts));
 
     let itemIndex = 0;
-    console.log(assets);
-
     categoryData[category].data.forEach(({ filename, ...data }) => {
-      const uniforms = {
-        time: { type: 'f', value: 1.0 },
-        fogColor: { type: 'c', value: (scene.fog as Fog).color },
-        fogNear: { type: 'f', value: (scene.fog as Fog).near },
-        fogFar: { type: 'f', value: (scene.fog as Fog).far },
-        _texture: { type: 't', value: assets.textures[filename] },
-        opacity: { type: 'f', value: 1.0 },
-        progress: { type: 'f', value: 0.0 },
-        gradientColor: { type: 'vec3', value: new Color(0x1b42d8) },
-      };
-      const geometry = new PlaneGeometry(1, 1);
-      const material = new ShaderMaterial({
-        uniforms,
-        fragmentShader: frag,
-        vertexShader: vert,
-        transparent: true,
-      });
-      const mesh = new Mesh(geometry, material);
-      mesh.scale.set(assets.textures[filename].size!.x, assets.textures[filename].size!.y, 1);
-
-      const align = itemIndexTotal % 4;
-      const pos = new Vector2();
-
-      if (align === 0) pos.set(-350, 350); // bottom left
-      if (align === 1) pos.set(350, 350); // bottom right
-      if (align === 2) pos.set(350, -350); // top right
-      if (align === 3) pos.set(-350, -350); // top left
-
-      const origPos = new Vector2(pos.x, pos.y);
-
-      const group = new Group();
-      group.position.set(pos.x, pos.y, itemIndex * -300 - 200);
-      group.add(mesh);
-
-      const item: IItem = {
-        uniforms,
-        material,
-        geometry,
-        mesh,
-        origPos,
-        active: false,
-        align,
+      const item = createSectionItems(
+        texturesAndFonts,
         category,
-        group,
-      };
+        { filename, ...data },
+        filename,
+        itemIndexTotal,
+        itemIndex
+      );
 
       item.mesh.onClick = () => openItem(item);
-      addCaption(item, data);
       sectionItems[filename] = item;
 
       categorySections[category].add(item.group);
@@ -219,65 +132,6 @@ for (const category in categoryData) {
 
   if (category === 'end') {
     stopScrollPos = categorySections[category].position.z;
-  }
-}
-console.log(categorySections);
-console.log(sectionItems);
-
-function addCaption(item: IItem, data: any) {
-  // TODO fix type
-  if (data.caption === '' && data.link === '') return;
-
-  if (data.caption !== '') {
-    const captionGeom = new TextGeometry(data.caption, {
-      font: assets.fonts['Schnyder L'],
-      size: 18,
-      height: 0,
-      curveSegments: 6,
-    }).center();
-
-    const caption = new Mesh(captionGeom, captionTextMaterial);
-    caption.position.set(0, -item.mesh.scale.y / 2 - 50, 0);
-    caption.visible = false;
-
-    item.caption = caption;
-    item.group.add(caption);
-  }
-  if (data.link !== '') {
-    item.linkGroup = new Group();
-
-    let linkGeom = new TextGeometry('SEE MORE', {
-      font: assets.fonts['Schnyder L'],
-      size: 6,
-      height: 0,
-      curveSegments: 6,
-    }).center();
-
-    item.link = new Mesh(linkGeom, captionTextMaterial);
-
-    item.linkUnderline = new Mesh(new PlaneBufferGeometry(45, 1), linkUnderlineMaterial);
-    item.linkUnderline.position.set(0, -10, 0);
-
-    // for raycasting so it doesn't just pick up on letters
-    item.linkBox = new Mesh(
-      new PlaneBufferGeometry(70, 20),
-      new MeshBasicMaterial({ alphaTest: 0, visible: false })
-    );
-    item.linkBox.onClick = () => {
-      window.open(data.link, '_blank');
-    };
-
-    item.linkGroup.position.set(
-      0,
-      item.caption ? item.caption.position.y - 40 : -item.mesh.scale.y / 2 - 50,
-      0
-    );
-    item.linkGroup.visible = false;
-
-    item.linkGroup.add(item.link);
-    item.linkGroup.add(item.linkUnderline);
-    item.linkGroup.add(item.linkBox);
-    item.group.add(item.linkGroup);
   }
 }
 

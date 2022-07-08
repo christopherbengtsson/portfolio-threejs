@@ -6,7 +6,6 @@ import { IAssets, ITexture } from '../types';
 import { progressPromise } from './progress';
 
 export const loadAssets = (categoryData: IAssets) => {
-  console.log(categoryData);
   const assetLoadPromises: Promise<Texture | Font>[] = [];
 
   const imageLoader = new TextureLoader();
