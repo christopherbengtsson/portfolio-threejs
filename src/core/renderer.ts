@@ -12,6 +12,8 @@ export const sizes = {
   height: window.innerHeight,
 };
 
+export const scale = Math.min(1, sizes.width / 1400);
+
 export const renderer = new WebGLRenderer({
   antialias: true,
   alpha: true,
@@ -20,7 +22,7 @@ export const renderer = new WebGLRenderer({
 export const scene = new Scene();
 scene.background = new Color(0xaec7c3);
 scene.fog = new Fog(0xaec7c3, 1400, 2000);
-if (sizes.width < 600) scene.scale.set(0.4, 0.4, 1);
+scene.scale.set(scale, scale, 1);
 
 function updateRenderer() {
   renderer.setSize(sizes.width, sizes.height);

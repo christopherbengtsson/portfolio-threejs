@@ -235,6 +235,7 @@ function openItem(item: IItem) {
 
     if (sectionItems[itemKey] === item) continue;
 
+    // TODO: Something's fucked up, probably groups
     gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
       value: 0,
       ease: 'Expo.easeInOut',

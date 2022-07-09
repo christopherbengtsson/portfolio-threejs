@@ -6,7 +6,7 @@ import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 
 export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
-    font: fonts['Schnyder L'],
+    font: fonts['Roboto'],
     size: 60,
     height: 0,
     curveSegments: 10,
@@ -16,7 +16,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   //   categorySections[category].add(intro);
 
   const introBigTextGeometry = new TextGeometry('1337', {
-    font: fonts['Schnyder L'],
+    font: fonts['Roboto'],
     size: 640,
     height: 0,
     curveSegments: 4,
@@ -30,7 +30,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
 }
 export function createEndSection({ fonts }: ITexturesAndFonts) {
   const endTextGeometry = new TextGeometry("Yep, that's it", {
-    font: fonts['Schnyder L'],
+    font: fonts['Roboto'],
     size: 200,
     height: 0,
     curveSegments: 4,
@@ -43,7 +43,7 @@ export function createEndSection({ fonts }: ITexturesAndFonts) {
 }
 export function createGenericSection(category: string, { fonts }: ITexturesAndFonts) {
   const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
-    font: fonts['Schnyder L'],
+    font: fonts['Roboto'],
     size: 200,
     height: 0,
     curveSegments: 10,

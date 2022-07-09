@@ -45,6 +45,7 @@ export function createSectionItems(
     transparent: true,
   });
   material.fog = true;
+  
   const mesh = new Mesh(geometry, material);
   mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
 
@@ -93,7 +94,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
 
   if (data.caption !== '') {
     const captionGeom = new TextGeometry(data.caption, {
-      font: fonts['Schnyder L'],
+      font: fonts['Roboto'],
       size: 18,
       height: 0,
       curveSegments: 6,
@@ -110,7 +111,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     item.linkGroup = new Group();
 
     let linkGeom = new TextGeometry('SEE MORE', {
-      font: fonts['Schnyder L'],
+      font: fonts['Roboto'],
       size: 6,
       height: 0,
       curveSegments: 6,

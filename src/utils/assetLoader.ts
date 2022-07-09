@@ -36,11 +36,16 @@ export const loadAssets = (categoryData: IAssets) => {
   }
 
   const fontLoader = new FontLoader();
-  const fonts = ['fonts/schnyder.json']; // TODO
+  const fonts = ['fonts/Roboto_Regular.json']; // TODO
 
   for (const font of fonts) {
     assetLoadPromises.push(
-      new Promise((resolve) => fontLoader.load(font, (font) => resolve(font)))
+      new Promise((resolve) =>
+        fontLoader.load(font, (font) => {
+          console.log(font)
+          resolve(font);
+        })
+      )
     );
   }
 
