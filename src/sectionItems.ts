@@ -48,6 +48,15 @@ export function createSectionItems(
   const mesh = new Mesh(geometry, material);
   mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
 
+  textures[filename].onUpdate = () => {
+    if (
+      mesh.scale.x !== textures[filename].size!.x &&
+      mesh.scale.y !== textures[filename].size!.y
+    ) {
+      mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
+    }
+  };
+
   const align = itemIndexTotal % 4;
   const pos = new Vector2();
 
