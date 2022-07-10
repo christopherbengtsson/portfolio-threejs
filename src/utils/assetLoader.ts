@@ -1,7 +1,7 @@
 import { Texture, TextureLoader, Vector2 } from 'three';
 import { Font, FontLoader } from 'three/examples/jsm/loaders/FontLoader';
 import { progressBar, progressEl } from '../core/dom';
-import { renderer } from '../core/renderer';
+import { renderer } from '../core/threejs';
 import { IAssets, ITexture } from '../types';
 import { progressPromise } from './progress';
 

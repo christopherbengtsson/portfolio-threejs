@@ -5,26 +5,26 @@ import gsap from 'gsap';
 import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
 
-import { mode, renderer, scene, stats } from './core/renderer';
-import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/camera';
+import { mode, renderer, scene, stats } from './core/threejs';
+import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs';
 import {
   textMaterial,
   textOutlineMaterial,
   captionTextMaterial,
   linkUnderlineMaterial,
-} from './core/materials';
+} from './core/threejs';
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
 import { cursor } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
-import { createEndSection, createGenericSection, createIntroSection } from './category';
-import { createSectionItems } from './sectionItems';
+import { createEndSection, createGenericSection, createIntroSection } from './components/category';
+import { createSectionItem } from './components/item';
 
 gsap.registerPlugin(CSSRulePlugin);
 
-let controls = {
+let autoScroll = {
   holdingMouseDown: false,
   autoMoveSpeed: 0,
 };
@@ -85,7 +85,7 @@ for (const category in categoryData) {
 
     let itemIndex = 0;
     categoryData[category].data.forEach(({ filename, ...data }) => {
-      const item = createSectionItems(
+      const item = createSectionItem(
         texturesAndFonts,
         category,
         { filename, ...data },
@@ -394,7 +394,7 @@ function changeColours() {
 
 function mouseDown(e: MouseEvent) {
   e.preventDefault();
-  controls.holdingMouseDown = true;
+  autoScroll.holdingMouseDown = true;
 
   if (itemOpen) {
     if (linkIntersect.length > 0) {
@@ -411,7 +411,7 @@ function mouseDown(e: MouseEvent) {
     } else {
       cursor.dataset.cursor = 'move';
 
-      gsap.to(controls, {
+      gsap.to(autoScroll, {
         delay: 0.7,
         autoMoveSpeed: 20,
         duration: 0.5,
@@ -422,13 +422,13 @@ function mouseDown(e: MouseEvent) {
 
 function mouseUp() {
   if (!itemOpen) cursor.dataset.cursor = 'pointer';
-  controls.holdingMouseDown = false;
-  gsap.killTweensOf(controls, { autoMoveSpeed: true });
-  controls.autoMoveSpeed = 0;
+  autoScroll.holdingMouseDown = false;
+  gsap.killTweensOf(autoScroll, { autoMoveSpeed: true });
+  autoScroll.autoMoveSpeed = 0;
 }
 
 function mouseMove(e: MouseEvent) {
-  if (!itemOpen && !controls.holdingMouseDown) {
+  if (!itemOpen && !autoScroll.holdingMouseDown) {
     mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
 
@@ -500,11 +500,11 @@ function initListeners() {
     scrolling = true;
   });
   gesture.on('panend', (_e) => {
-    controls.autoMoveSpeed = 0;
+    autoScroll.autoMoveSpeed = 0;
   });
 
   gesture.on('longpress', (_e) => {
-    controls.autoMoveSpeed = 10;
+    autoScroll.autoMoveSpeed = 10;
   });
 
   if (!touchEnabled) {
@@ -550,9 +550,9 @@ const loop = () => {
     updatingPerspective = false;
   }
 
-  if (controls.autoMoveSpeed > 0) {
+  if (autoScroll.autoMoveSpeed > 0) {
     scrolling = true;
-    scrollPos += controls.autoMoveSpeed;
+    scrollPos += autoScroll.autoMoveSpeed;
   }
 
   // smooth scrolling

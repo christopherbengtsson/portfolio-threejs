@@ -10,15 +10,15 @@ import {
   Vector2,
 } from 'three';
 
-import vert from './shaders/default.vert';
-import frag from './shaders/item.frag';
+import vert from '../shaders/default.vert';
+import frag from '../shaders/item.frag';
 
-import { scene } from './core/renderer';
-import { IData, IItem, ITexturesAndFonts, TFonts } from './types';
+import { scene } from '../core/threejs';
+import { IData, IItem, ITexturesAndFonts, TFonts } from '../types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { captionTextMaterial, linkUnderlineMaterial } from './core/materials';
+import { captionTextMaterial, linkUnderlineMaterial } from '../core/threejs';
 
-export function createSectionItems(
+export function createSectionItem(
   texturesAndFonts: ITexturesAndFonts,
   category: string,
   data: IData,

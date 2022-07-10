@@ -1,5 +1,5 @@
 import { PerspectiveCamera, Raycaster, Vector2 } from 'three';
-import { sizes } from './renderer';
+import { sizes } from '.';
 
 export const CAMERA_POSITION = 800;
 const FOV = (180 * (2 * Math.atan(sizes.height / 2 / CAMERA_POSITION))) / Math.PI; // TODO: mobile's not gut

@@ -1,8 +1,8 @@
 import { Mesh } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { textMaterial, textOutlineMaterial } from './core/materials';
-import { ITexturesAndFonts } from './types';
-import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
+import { textMaterial, textOutlineMaterial } from '../core/threejs';
+import { ITexturesAndFonts } from '../types';
+import { categoriesCommonConfig } from '../utils/categoriesCommonConfig';
 
 export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
