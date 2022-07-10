@@ -5,14 +5,14 @@ import gsap from 'gsap';
 import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
 
-import { mode, renderer, scene, stats } from './core/threejs';
-import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs';
+import { mode, renderer, scene, stats } from './core/threejs/renderer';
+import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs/camera';
 import {
   textMaterial,
   textOutlineMaterial,
   captionTextMaterial,
   linkUnderlineMaterial,
-} from './core/threejs';
+} from './core/threejs/materials';
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';

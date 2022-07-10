@@ -13,10 +13,10 @@ import {
 import vert from '../shaders/default.vert';
 import frag from '../shaders/item.frag';
 
-import { scene } from '../core/threejs';
+import { scene } from '../core/threejs/renderer';
 import { IData, IItem, ITexturesAndFonts, TFonts } from '../types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { captionTextMaterial, linkUnderlineMaterial } from '../core/threejs';
+import { captionTextMaterial, linkUnderlineMaterial } from '../core/threejs/materials';
 
 export function createSectionItem(
   texturesAndFonts: ITexturesAndFonts,

@@ -1,6 +1,6 @@
 import { Mesh } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { textMaterial, textOutlineMaterial } from '../core/threejs';
+import { textMaterial, textOutlineMaterial } from '../core/threejs/materials';
 import { ITexturesAndFonts } from '../types';
 import { categoriesCommonConfig } from '../utils/categoriesCommonConfig';
 
