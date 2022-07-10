@@ -13,7 +13,6 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   }).center();
 
   const intro = new Mesh(introSmallTextGeometry, textMaterial);
-  //   categorySections[category].add(intro);
 
   const introBigTextGeometry = new TextGeometry('1337', {
     font: fonts['Roboto'],
@@ -24,7 +23,6 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
 
   const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
   subIntroText.position.set(0, 0, -500);
-  //   categorySections[category].add(subIntroText);
 
   return [intro, subIntroText];
 }
@@ -38,7 +36,7 @@ export function createEndSection({ fonts }: ITexturesAndFonts) {
 
   const endText = new Mesh(endTextGeometry, textOutlineMaterial);
   endText.position.set(0, 0, -300);
-  //   categorySections[category].add(endText);
+
   return [endText];
 }
 export function createGenericSection(category: string, { fonts }: ITexturesAndFonts) {
@@ -51,6 +49,6 @@ export function createGenericSection(category: string, { fonts }: ITexturesAndFo
 
   const categoryName = new Mesh(textGeometry, textMaterial);
   categoryName.position.set(0, 0, 0);
-  // categorySections[category].add(categoryName);
+
   return [categoryName];
 }

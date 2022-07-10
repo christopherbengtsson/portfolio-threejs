@@ -4,7 +4,7 @@ export const categoriesCommonConfig: ICommonConfig = {
   intro: {
     textColor: 0x1b42d8,
     outlineTextColor: 0x1b42d8,
-    bgColor: 0xAEC7C3,
+    bgColor: 0xaec7c3,
     tintColor: 0x1b42d8,
     order: 1,
   },
@@ -17,7 +17,7 @@ export const categoriesCommonConfig: ICommonConfig = {
   },
   experience: {
     name: 'EXPERIENCE',
-    textColor: 0xFD6F53,
+    textColor: 0xfd6f53,
     bgColor: 0x012534,
     tintColor: 0x012534,
     order: 3,

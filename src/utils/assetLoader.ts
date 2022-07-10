@@ -42,7 +42,7 @@ export const loadAssets = (categoryData: IAssets) => {
     assetLoadPromises.push(
       new Promise((resolve) =>
         fontLoader.load(font, (font) => {
-          console.log(font)
+          console.log(font);
           resolve(font);
         })
       )

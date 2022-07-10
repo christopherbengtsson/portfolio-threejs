@@ -45,7 +45,7 @@ export function createSectionItems(
     transparent: true,
   });
   material.fog = true;
-  
+
   const mesh = new Mesh(geometry, material);
   mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
 

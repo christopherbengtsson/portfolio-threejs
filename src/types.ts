@@ -65,6 +65,8 @@ export interface ICommonConfig {
 export interface IFileData {
   [category: string]: {
     [filename: string]: {
+      filename: string;
+      filepath: string;
       caption: string;
       link: string;
     };
