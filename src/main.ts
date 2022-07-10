@@ -1,13 +1,6 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import {
-  Box3,
-  Color,
-  Group,
-  Intersection,
-  Texture,
-  Vector2,
-} from 'three';
+import { Box3, Color, Group, Intersection, Texture, Vector2 } from 'three';
 import gsap from 'gsap';
 import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
@@ -228,14 +221,13 @@ function openItem(item: IItem) {
   const position = new Vector2();
 
   for (let itemKey in sectionItems) {
-    if (item.align === 0) position.set(-700, 700); // bottom left
-    if (item.align === 1) position.set(700, 700); // bottom right
-    if (item.align === 2) position.set(700, -700); // top right
-    if (item.align === 3) position.set(-700, -700); // top left
+    if (sectionItems[itemKey].align === 0) position.set(-700, 700); // bottom left
+    if (sectionItems[itemKey].align === 1) position.set(700, 700); // bottom right
+    if (sectionItems[itemKey].align === 2) position.set(700, -700); // top right
+    if (sectionItems[itemKey].align === 3) position.set(-700, -700); // top left
 
     if (sectionItems[itemKey] === item) continue;
 
-    // TODO: Something's fucked up, probably groups
     gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
       value: 0,
       ease: 'Expo.easeInOut',
