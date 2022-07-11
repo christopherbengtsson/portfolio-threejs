@@ -2,10 +2,9 @@ import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { Box3, Color, Group, Intersection, Texture, Vector2 } from 'three';
 import gsap from 'gsap';
-import CSSRulePlugin from 'gsap/CSSRulePlugin';
 import TinyGesture from 'tinygesture';
 
-import { mode, renderer, scene, stats } from './core/threejs/renderer';
+import { mode, renderer, scale, scene, stats } from './core/threejs/renderer';
 import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs/camera';
 import {
   textMaterial,
@@ -16,13 +15,11 @@ import {
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
-import { cursor } from './core/dom';
+import { cursor, cursorSvgs, mainSvgs } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
-
-gsap.registerPlugin(CSSRulePlugin);
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -43,6 +40,8 @@ let linkIntersect: Intersection<IObject3D>[] = [];
 
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
+else document.documentElement.classList.add('enable-cursor');
+
 const categoryPositions: { [key: string]: number } = {};
 
 const texturesAndFonts: ITexturesAndFonts = {
@@ -152,7 +151,7 @@ function openItem(item: IItem) {
   });
 
   gsap.to(grid.position, {
-    z: -(posOffset - -item.group.position.z) + 300,
+    z: -(posOffset - -item.group.position.z) + (scale < 0.5 ? 450 : 300),
     ease: 'Expo.easeInOut',
     duration: 1.5,
   });
@@ -326,9 +325,7 @@ function changeColours() {
     let bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
     let textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
     let tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
-    let svgRule = CSSRulePlugin.getRule('main svg'); // TODO: undefined?
-    let svgCursorRule = CSSRulePlugin.getRule('.cursor svg');
-    let interfaceColor;
+    let interfaceColor: string;
 
     gsap.to(scene.fog!.color, {
       r: bgColor.r,
@@ -346,12 +343,18 @@ function changeColours() {
       duration: 1,
     });
 
-    gsap.to([textMaterial.color, captionTextMaterial.color], {
+    gsap.to([textMaterial.color], {
       r: textColor.r,
       g: textColor.g,
       b: textColor.b,
       ease: 'Power4.easeOut',
       duration: 1,
+    });
+
+    gsap.set([captionTextMaterial.color, linkUnderlineMaterial.color], {
+      r: textColor.r,
+      g: textColor.g,
+      b: textColor.b,
     });
 
     for (let id in sectionItems) {
@@ -379,21 +382,19 @@ function changeColours() {
       interfaceColor = textColor.getHexString();
     }
 
-    gsap.to(svgRule, {
-      cssRule: { fill: '#' + interfaceColor },
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-    gsap.to(svgCursorRule, {
-      cssRule: { stroke: '#' + interfaceColor },
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
+    gsap.to(mainSvgs, { fill: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
+    gsap.to(cursorSvgs, { stroke: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
+
+    document
+      .querySelector('meta[name=theme-color]')!
+      .setAttribute('content', '#' + bgColor.getHexString());
   }
 }
 
 function mouseDown(e: MouseEvent) {
   e.preventDefault();
+  e.stopPropagation();
+
   autoScroll.holdingMouseDown = true;
 
   if (itemOpen) {
@@ -428,6 +429,21 @@ function mouseUp() {
 }
 
 function mouseMove(e: MouseEvent) {
+  mousePerspective.x = e.clientX / window.innerWidth - 0.5;
+  mousePerspective.y = e.clientY / window.innerHeight - 0.5;
+  updatingPerspective = true;
+
+  if (!touchEnabled) {
+    gsap.to('.cursor', {
+      x: e.clientX,
+      y: e.clientY,
+      ease: 'Power4.easeOut',
+      duration: 1.5,
+    });
+  }
+
+  if (!renderer || e.target !== renderer.domElement) return;
+
   if (!itemOpen && !autoScroll.holdingMouseDown) {
     mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
     mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
@@ -457,19 +473,6 @@ function mouseMove(e: MouseEvent) {
       cursor.dataset.cursor = 'cross';
     }
   }
-
-  mousePerspective.x = e.clientX / window.innerWidth - 0.5;
-  mousePerspective.y = e.clientY / window.innerHeight - 0.5;
-  updatingPerspective = true;
-
-  if (!touchEnabled) {
-    gsap.to('.cursor', {
-      x: e.clientX,
-      y: e.clientY,
-      ease: 'Power4.easeOut',
-      duration: 1.5,
-    });
-  }
 }
 
 function scroll(ev: WheelEvent) {
@@ -486,8 +489,6 @@ function scroll(ev: WheelEvent) {
 }
 
 function initListeners() {
-  window.addEventListener('mousemove', mouseMove, false);
-
   renderer.domElement.addEventListener('mousedown', mouseDown, false);
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
@@ -509,6 +510,16 @@ function initListeners() {
 
   if (!touchEnabled) {
     cursor.dataset.cursor = 'pointer';
+  }
+}
+
+function initCursorListeners() {
+  window.addEventListener('mousemove', mouseMove, false);
+
+  let eyeCursorEls = document.querySelectorAll('.cursor-eye');
+  for (let i = 0; i < eyeCursorEls.length; i++) {
+    eyeCursorEls[i].addEventListener('mouseenter', eyeCursorElEnter, false);
+    eyeCursorEls[i].addEventListener('mouseleave', eyeCursorElLeave, false);
   }
 }
 
@@ -542,6 +553,14 @@ function updatePerspective() {
   });
 
   updatingPerspective = false;
+}
+
+function eyeCursorElEnter() {
+  cursor.dataset.cursor = 'eye';
+}
+
+function eyeCursorElLeave() {
+  cursor.dataset.cursor = 'pointer';
 }
 
 const loop = () => {
@@ -582,6 +601,7 @@ const loop = () => {
 
 loop();
 initListeners();
+initCursorListeners();
 document.body.classList.add('ready');
 
 function moveToStart() {

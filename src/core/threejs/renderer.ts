@@ -29,10 +29,14 @@ function updateRenderer() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // To avoid performance problems on devices with higher pixel ratio
 }
 
-window.addEventListener('resize', () => {
-  sizes.width = window.innerWidth;
-  sizes.height = window.innerHeight;
-  updateRenderer();
-});
+window.addEventListener(
+  'resize',
+  () => {
+    sizes.width = window.innerWidth;
+    sizes.height = window.innerHeight;
+    updateRenderer();
+  },
+  false
+);
 
 updateRenderer();

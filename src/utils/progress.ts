@@ -6,10 +6,14 @@ export function progressPromise(
   let progress = 0;
 
   function tick(promise: Promise<any>) {
-    promise.then(function () {
-      progress++;
-      tickCallback(progress, length);
-    });
+    promise
+      .then(function () {
+        progress++;
+        tickCallback(progress, length);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
     return promise;
   }
 

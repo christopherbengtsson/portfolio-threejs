@@ -8,6 +8,7 @@ body {
   overflow: hidden;
   overscroll-behavior-y: none;
   background-color: #aec7c3;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   * {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -249,9 +250,10 @@ main {
   z-index: 10;
   transform: translate(-100px, -100px);
   pointer-events: none;
+  display: none;
 
-  .touch-enabled & {
-    display: none;
+  .enable-cursor & {
+    display: block;
   }
 
   &[data-cursor='pointer'] {
