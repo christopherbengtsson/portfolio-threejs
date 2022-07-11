@@ -24,10 +24,10 @@ import { createSectionItem } from './components/item';
 let autoScroll = {
   holdingMouseDown: false,
   autoMoveSpeed: 0,
+  scrollPos: 0,
+  scrolling: false,
+  allowScrolling: true,
 };
-let scrolling: boolean;
-let scrollPos = 0;
-let allowScrolling = true;
 let stopScrollPos: number;
 let itemOpen: any = null;
 let itemAnimating = false;
@@ -37,6 +37,8 @@ let activeCategory = 'education';
 let remainingCategories: string[] = [];
 let intersects: Intersection<IObject3D>[] = [];
 let linkIntersect: Intersection<IObject3D>[] = [];
+let whooshIntersects: Intersection<IObject3D>[] = [];
+let hoveringWhoosh: boolean;
 
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
@@ -125,7 +127,7 @@ function openItem(item: IItem) {
   itemAnimating = true;
   itemOpen = item;
   origGridPos = grid.position.z;
-  allowScrolling = false;
+  autoScroll.allowScrolling = false;
 
   let posOffset = categorySections[activeCategory].position.z;
 
@@ -259,7 +261,7 @@ function closeItem() {
       ease: 'Expo.easeInOut',
       duration: 1.5,
       onComplete: () => {
-        allowScrolling = true;
+        autoScroll.allowScrolling = true;
         itemOpen = null;
         itemAnimating = false;
       },
@@ -409,6 +411,14 @@ function mouseDown(e: MouseEvent) {
         intersects[0].object.onClick();
         cursor.dataset.cursor = 'cross';
       }
+    } else if (hoveringWhoosh) {
+      autoScroll.scrolling = true;
+
+      gsap.to(autoScroll, {
+        scrollPos: 0,
+        ease: 'Expo.easeInOut',
+        duration: 4,
+      });
     } else {
       cursor.dataset.cursor = 'move';
 
@@ -444,27 +454,39 @@ function mouseMove(e: MouseEvent) {
 
   if (!renderer || e.target !== renderer.domElement) return;
 
+  mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
+  mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+
   if (!itemOpen && !autoScroll.holdingMouseDown) {
-    mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
     intersects = raycaster.intersectObjects(sectionItemsMeshes);
 
     if (intersects.length > 0) {
       cursor.dataset.cursor = 'eye';
-    } else if (cursor.dataset.cursor !== 'pointer') {
-      cursor.dataset.cursor = 'pointer';
+    } else {
+      if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
+
+      const whooshIntersectsGroup = categorySections['end'].children.find(
+        ({ name }) => name === 'backToStart'
+      )!;
+      whooshIntersects = raycaster.intersectObjects(whooshIntersectsGroup.children);
+
+      if (whooshIntersects.length > 0) {
+        cursor.dataset.cursor = 'none';
+        hoveringWhoosh = true;
+        whooshIntersectsGroup.userData.arrowGsap.timeScale(2);
+      } else {
+        if (hoveringWhoosh) {
+          cursor.dataset.cursor = 'pointer';
+          hoveringWhoosh = false;
+          whooshIntersectsGroup.userData.arrowGsap.timeScale(1);
+        }
+      }
     }
+    return;
   }
 
   if (itemOpen && itemOpen.linkBox) {
-    mouse.x = (e.clientX / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = -(e.clientY / renderer.domElement.clientHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
     linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
 
     if (linkIntersect.length > 0) {
@@ -478,8 +500,8 @@ function mouseMove(e: MouseEvent) {
 function scroll(ev: WheelEvent) {
   const delta = normalizeWheelDelta(ev);
 
-  scrollPos += -delta * 20;
-  scrolling = true;
+  autoScroll.scrollPos += -delta * 20;
+  autoScroll.scrolling = true;
 
   function normalizeWheelDelta(e: WheelEvent) {
     if (e.detail && e.deltaY) return (e.deltaY / e.detail / 40) * (e.detail > 0 ? 1 : -1); // Opera
@@ -497,8 +519,8 @@ function initListeners() {
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
-    scrollPos += -gesture.velocityY! * 6;
-    scrolling = true;
+    autoScroll.scrollPos += -gesture.velocityY! * 6;
+    autoScroll.scrolling = true;
   });
   gesture.on('panend', (_e) => {
     autoScroll.autoMoveSpeed = 0;
@@ -552,6 +574,16 @@ function updatePerspective() {
     duration: 4,
   });
 
+  const backToStart = categorySections['end'].children.find(({ name }) => name === 'backToStart')!;
+  const arrow = backToStart.children.find(({ name }) => name === 'arrow')!;
+
+  gsap.to(arrow.rotation, {
+    x: -1.5 + mousePerspective.y * 0.2,
+    y: mousePerspective.x * 0.8,
+    ease: 'Power4.easeOut',
+    duration: 4,
+  });
+
   updatingPerspective = false;
 }
 
@@ -570,25 +602,33 @@ const loop = () => {
   }
 
   if (autoScroll.autoMoveSpeed > 0) {
-    scrolling = true;
-    scrollPos += autoScroll.autoMoveSpeed;
+    autoScroll.scrolling = true;
+    autoScroll.scrollPos += autoScroll.autoMoveSpeed;
   }
 
   // smooth scrolling
-  if (allowScrolling && scrolling) {
-    if (scrollPos <= 0) scrollPos = 0;
-    if (scrollPos >= -stopScrollPos) scrollPos = -stopScrollPos;
+  if (autoScroll.allowScrolling && autoScroll.scrolling) {
+    if (autoScroll.scrollPos <= 0) autoScroll.scrollPos = 0;
+    if (autoScroll.scrollPos >= -stopScrollPos) autoScroll.scrollPos = -stopScrollPos;
 
-    const delta = (scrollPos - grid.position.z) / 12;
+    const delta = (autoScroll.scrollPos - grid.position.z) / 12;
     grid.position.z += delta;
 
     changeColours();
 
     if (Math.abs(delta) > 0.1) {
-      scrolling = true;
+      autoScroll.scrolling = true;
     } else {
-      scrolling = false;
+      autoScroll.scrolling = false;
     }
+  }
+
+  if (hoveringWhoosh) {
+    const backToStart = categorySections['end'].children.find(
+      ({ name }) => name === 'backToStart'
+    )!;
+    const circle = backToStart.children.find(({ name }) => name === 'circle')!;
+    circle.rotation.z += 0.005;
   }
 
   if (mode === 'development') {
@@ -615,8 +655,15 @@ function moveToStart() {
     y: '-100%',
     ease: 'Expo.easeInOut',
     duration: 2,
-    onComplete() {
+    onComplete: () => {
       (document.querySelector('.loading') as HTMLElement).style.display = 'none';
     },
+  });
+
+  gsap.to(['.logo', '.social'], {
+    y: 0,
+    delay: 1,
+    ease: 'Expo.easeInOut',
+    duration: 2,
   });
 }

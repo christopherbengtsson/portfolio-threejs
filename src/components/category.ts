@@ -3,6 +3,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { textMaterial, textOutlineMaterial } from '../core/threejs/materials';
 import { ITexturesAndFonts } from '../types';
 import { categoriesCommonConfig } from '../utils/categoriesCommonConfig';
+import { createBackToStartBtn } from './backToStart';
 
 export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
@@ -37,7 +38,10 @@ export function createEndSection({ fonts }: ITexturesAndFonts) {
   const endText = new Mesh(endTextGeometry, textOutlineMaterial);
   endText.position.set(0, 0, -300);
 
-  return [endText];
+  const backToStartBtn = createBackToStartBtn();
+
+
+  return [endText, backToStartBtn];
 }
 export function createGenericSection(category: string, { fonts }: ITexturesAndFonts) {
   const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
