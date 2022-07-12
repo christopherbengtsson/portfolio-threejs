@@ -459,13 +459,7 @@ function mouseMove(e: MouseEvent) {
   raycaster.setFromCamera(mouse, camera);
 
   if (!itemOpen && !autoScroll.holdingMouseDown) {
-    intersects = raycaster.intersectObjects(sectionItemsMeshes);
-
-    if (intersects.length > 0) {
-      cursor.dataset.cursor = 'eye';
-    } else {
-      if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
-
+    if (activeCategory === 'end') {
       const whooshIntersectsGroup = categorySections['end'].children.find(
         ({ name }) => name === 'backToStart'
       )!;
@@ -482,17 +476,24 @@ function mouseMove(e: MouseEvent) {
           whooshIntersectsGroup.userData.arrowGsap.timeScale(1);
         }
       }
+    } else {
+      intersects = raycaster.intersectObjects(sectionItemsMeshes);
+
+      if (intersects.length > 0) {
+        cursor.dataset.cursor = 'eye';
+      } else {
+        if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
+      }
     }
-    return;
-  }
 
-  if (itemOpen && itemOpen.linkBox) {
-    linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
+    if (itemOpen && itemOpen.linkBox) {
+      linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
 
-    if (linkIntersect.length > 0) {
-      cursor.dataset.cursor = 'eye';
-    } else if (cursor.dataset.cursor !== 'cross') {
-      cursor.dataset.cursor = 'cross';
+      if (linkIntersect.length > 0) {
+        cursor.dataset.cursor = 'eye';
+      } else if (cursor.dataset.cursor !== 'cross') {
+        cursor.dataset.cursor = 'cross';
+      }
     }
   }
 }
@@ -577,12 +578,14 @@ function updatePerspective() {
   const backToStart = categorySections['end'].children.find(({ name }) => name === 'backToStart')!;
   const arrow = backToStart.children.find(({ name }) => name === 'arrow')!;
 
-  gsap.to(arrow.rotation, {
-    x: -1.5 + mousePerspective.y * 0.2,
-    y: mousePerspective.x * 0.8,
-    ease: 'Power4.easeOut',
-    duration: 4,
-  });
+  if (activeCategory === 'end') {
+    gsap.to(arrow.rotation, {
+      x: -1.5 + mousePerspective.y * 0.2,
+      y: mousePerspective.x * 0.8,
+      ease: 'Power4.easeOut',
+      duration: 4,
+    });
+  }
 
   updatingPerspective = false;
 }
