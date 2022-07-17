@@ -1,4 +1,4 @@
-import { IFileData } from '../types';
+import { IFileData, ITexturesAndFonts } from '../types';
 
 import shapes from '../../assets/education/shapes.jpg';
 import arch from '../../assets/education/arch.jpeg';
@@ -11,6 +11,9 @@ import desert from '../../assets/experience/desert.jpeg';
 import nature from '../../assets/experience/nature.jpeg';
 import woman from '../../assets/experience/woman.jpeg';
 import water from '../../assets/experience/water.jpeg';
+import headlight_relight from '../../assets/experience/headlight_relight.jpeg';
+import trustly from '../../assets/experience/trustly.png';
+import { createWordsSphere } from '../components/wordsSphere';
 
 export const fileData: IFileData = {
   education: {
@@ -46,36 +49,51 @@ export const fileData: IFileData = {
     },
   },
   experience: {
-    [extractFilename(drop)]: {
-      filepath: drop,
-      filename: extractFilename(drop),
-      caption: 'drop',
+    [extractFilename(headlight_relight)]: {
+      filepath: headlight_relight,
+      filename: extractFilename(headlight_relight),
+      caption: `Software developer 2017 - 2020`,
       link: 'https://google.se',
     },
-    [extractFilename(desert)]: {
-      filepath: desert,
-      filename: extractFilename(desert),
-      caption: 'A desert',
+    [extractFilename(trustly)]: {
+      filepath: trustly,
+      filename: extractFilename(trustly),
+      caption: 'Software engineer 2020 - present',
       link: 'https://google.se',
     },
-    [extractFilename(nature)]: {
-      filepath: nature,
-      filename: extractFilename(nature),
-      caption: 'Some... nature',
-      link: 'https://google.se',
-    },
-    [extractFilename(woman)]: {
-      filepath: woman,
-      filename: extractFilename(woman),
-      caption: 'Woman walking a dog',
-      link: 'https://google.se',
-    },
-    [extractFilename(water)]: {
-      filepath: water,
-      filename: extractFilename(water),
-      caption: 'A waterfall',
-      link: 'https://google.se',
-    },
+    // skills_sphere: {
+    //   getComponent: 'wordsSphere',
+    // },
+    // [extractFilename(drop)]: {
+    //   filepath: drop,
+    //   filename: extractFilename(drop),
+    //   caption: 'drop',
+    //   link: 'https://google.se',
+    // },
+    // [extractFilename(desert)]: {
+    //   filepath: desert,
+    //   filename: extractFilename(desert),
+    //   caption: 'A desert',
+    //   link: 'https://google.se',
+    // },
+    // [extractFilename(nature)]: {
+    //   filepath: nature,
+    //   filename: extractFilename(nature),
+    //   caption: 'Some... nature',
+    //   link: 'https://google.se',
+    // },
+    // [extractFilename(woman)]: {
+    //   filepath: woman,
+    //   filename: extractFilename(woman),
+    //   caption: 'Woman walking a dog',
+    //   link: 'https://google.se',
+    // },
+    // [extractFilename(water)]: {
+    //   filepath: water,
+    //   filename: extractFilename(water),
+    //   caption: 'A waterfall',
+    //   link: 'https://google.se',
+    // },
   },
 };
 

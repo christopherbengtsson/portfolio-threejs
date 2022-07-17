@@ -252,6 +252,13 @@ main {
   pointer-events: none;
   display: none;
 
+  svg {
+    fill: none;
+    stroke: #1b42d8;
+    stroke-miterlimit: 10;
+    stroke-width: 12px;
+  }
+
   .enable-cursor & {
     display: block;
   }
@@ -291,13 +298,6 @@ main {
         }
       }
     }
-  }
-
-  svg {
-    fill: none;
-    stroke: #1b42d8;
-    stroke-miterlimit: 10;
-    stroke-width: 12px;
   }
 
   > div {
@@ -370,49 +370,11 @@ main {
 @keyframes scaleUp {
   0% {
     opacity: 0;
-    transform: scale(0);
-  }
-
-  60% {
-    transform: scale(1.1);
-  }
-
-  80% {
-    transform: scale(0.9);
+    transform: scale(0.4);
   }
 
   100% {
     opacity: 1;
     transform: scale(1);
-  }
-}
-
-@keyframes fadeInUp {
-  0% {
-    transform: translate3d(0, 150%, 0);
-  }
-
-  20% {
-    opacity: 0;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes fadeInUpSmall {
-  0% {
-    transform: translate3d(0, 50%, 0);
-  }
-
-  20% {
-    opacity: 0;
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 1;
   }
 }

@@ -8,18 +8,18 @@ export const categoriesCommonConfig: ICommonConfig = {
     tintColor: 0x1b42d8,
     order: 1,
   },
-  education: {
-    name: 'EDUCATION',
-    textColor: 0xf7cf7e,
-    bgColor: 0x428884,
-    tintColor: 0x428884,
-    order: 2,
-  },
   experience: {
     name: 'EXPERIENCE',
     textColor: 0xfd6f53,
     bgColor: 0x012534,
     tintColor: 0x012534,
+    order: 2,
+  },
+  education: {
+    name: 'EDUCATION',
+    textColor: 0xf7cf7e,
+    bgColor: 0x428884,
+    tintColor: 0x428884,
     order: 3,
   },
   end: {
