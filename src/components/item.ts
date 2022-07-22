@@ -17,6 +17,7 @@ import { scene } from '../core/threejs/renderer';
 import { IData, IItem, ITexturesAndFonts, TFonts } from '../types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { captionTextMaterial, linkUnderlineMaterial } from '../core/threejs/materials';
+import { initialColor } from '../utils/categoriesCommonConfig';
 
 export function createSectionItem(
   texturesAndFonts: ITexturesAndFonts,
@@ -35,7 +36,7 @@ export function createSectionItem(
     _texture: { type: 't', value: textures[filename] },
     opacity: { type: 'f', value: 1.0 },
     progress: { type: 'f', value: 0.0 },
-    gradientColor: { type: 'vec3', value: new Color(0x1b42d8) },
+    gradientColor: { type: 'vec3', value: new Color(initialColor) },
   };
   const geometry = new PlaneGeometry(1, 1);
   const material = new ShaderMaterial({

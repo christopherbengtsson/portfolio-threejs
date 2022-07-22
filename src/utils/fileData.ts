@@ -1,4 +1,4 @@
-import { IFileData, ITexturesAndFonts } from '../types';
+import { IFileData } from '../types';
 
 import shapes from '../../assets/education/shapes.jpg';
 import arch from '../../assets/education/arch.jpeg';
@@ -6,42 +6,43 @@ import code from '../../assets/education/code.jpeg';
 import parts from '../../assets/education/parts.jpeg';
 import walking from '../../assets/education/walking.jpeg';
 
-import drop from '../../assets/experience/drop.jpg';
-import desert from '../../assets/experience/desert.jpeg';
-import nature from '../../assets/experience/nature.jpeg';
-import woman from '../../assets/experience/woman.jpeg';
-import water from '../../assets/experience/water.jpeg';
-import headlight_relight from '../../assets/experience/headlight_relight.jpeg';
 import trustly from '../../assets/experience/trustly.png';
-import { createWordsSphere } from '../components/wordsSphere';
+import relight from '../../assets/experience/relight.png';
+import headlight from '../../assets/experience/headlight.png';
+import oru from '../../assets/experience/oru.png';
 
 export const fileData: IFileData = {
   education: {
     [extractFilename(shapes)]: {
+      type: 'FILE',
       filepath: shapes,
       filename: extractFilename(shapes),
       caption: 'Some shapes',
       link: 'https://google.se',
     },
     [extractFilename(walking)]: {
+      type: 'FILE',
       filepath: walking,
       filename: extractFilename(walking),
       caption: 'Walking people',
       link: 'https://google.se',
     },
     [extractFilename(arch)]: {
+      type: 'FILE',
       filepath: arch,
       filename: extractFilename(arch),
       caption: 'Some architecture',
       link: 'https://google.se',
     },
     [extractFilename(code)]: {
+      type: 'FILE',
       filepath: code,
       filename: extractFilename(code),
       caption: 'Random code',
       link: 'https://google.se',
     },
     [extractFilename(parts)]: {
+      type: 'FILE',
       filepath: parts,
       filename: extractFilename(parts),
       caption: 'Random parts',
@@ -49,16 +50,32 @@ export const fileData: IFileData = {
     },
   },
   experience: {
-    [extractFilename(headlight_relight)]: {
-      filepath: headlight_relight,
-      filename: extractFilename(headlight_relight),
-      caption: `Software developer 2017 - 2020`,
-      link: 'https://google.se',
-    },
     [extractFilename(trustly)]: {
+      type: 'FILE',
       filepath: trustly,
       filename: extractFilename(trustly),
       caption: 'Software engineer 2020 - present',
+      link: 'https://google.se',
+    },
+    [extractFilename(relight)]: {
+      type: 'FILE',
+      filepath: relight,
+      filename: extractFilename(relight),
+      caption: `Software developer 2018 - 2020`,
+      link: 'https://google.se',
+    },
+    [extractFilename(headlight)]: {
+      type: 'FILE',
+      filepath: headlight,
+      filename: extractFilename(headlight),
+      caption: `Software developer 2017 - 2018`,
+      link: 'https://google.se',
+    },
+    [extractFilename(oru)]: {
+      type: 'FILE',
+      filepath: oru,
+      filename: extractFilename(oru),
+      caption: 'Informatics Science 2014 - 2017',
       link: 'https://google.se',
     },
     // skills_sphere: {

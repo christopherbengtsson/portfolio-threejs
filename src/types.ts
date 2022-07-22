@@ -62,9 +62,11 @@ export interface ICommonConfig {
     order: number;
   };
 }
+
 export interface IFileData {
   [category: string]: {
     [filename: string]: {
+      type: 'FILE' | 'COMPONENT';
       filename: string;
       filepath: string;
       caption: string;

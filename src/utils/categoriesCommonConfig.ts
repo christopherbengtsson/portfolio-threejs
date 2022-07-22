@@ -1,11 +1,12 @@
 import { ICommonConfig } from '../types';
 
+export const initialColor = 0x1b42d8;
 export const categoriesCommonConfig: ICommonConfig = {
   intro: {
-    textColor: 0x1b42d8,
-    outlineTextColor: 0x1b42d8,
+    textColor: initialColor,
+    outlineTextColor: initialColor,
     bgColor: 0xaec7c3,
-    tintColor: 0x1b42d8,
+    tintColor: initialColor,
     order: 1,
   },
   experience: {
