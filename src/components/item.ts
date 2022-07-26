@@ -9,6 +9,7 @@ import {
   ShaderMaterial,
   Vector2,
 } from 'three';
+import ThreeMeshUI from 'three-mesh-ui';
 
 import vert from '../shaders/default.vert';
 import frag from '../shaders/item.frag';
@@ -16,7 +17,11 @@ import frag from '../shaders/item.frag';
 import { scene } from '../core/threejs/renderer';
 import { IData, IItem, ITexturesAndFonts, TFonts } from '../types';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
-import { captionTextMaterial, linkUnderlineMaterial } from '../core/threejs/materials';
+import {
+  captionTextMaterial,
+  linkUnderlineMaterial,
+  textMaterial,
+} from '../core/threejs/materials';
 import { initialColor } from '../utils/categoriesCommonConfig';
 
 export function createSectionItem(
@@ -71,7 +76,30 @@ export function createSectionItem(
 
   const group = new Group();
   group.position.set(pos.x, pos.y, itemIndex * -300 - 200);
-  group.add(mesh);
+
+  const meshGroup = new Group();
+  meshGroup.add(mesh);
+
+  const container = new ThreeMeshUI.Block({
+    bestFit: 'shrink',
+    width: mesh.scale.x,
+    height: mesh.scale.y,
+    fontFamily: 'fonts/Roboto-Regular-msdf.json',
+    fontTexture: 'fonts/Roboto-Regular-msdf.png',
+    backgroundOpacity: 0,
+  });
+  container.rotation.set(0, -3.15, 0);
+
+  const text = new ThreeMeshUI.Text({
+    content: data.text,
+    fontSize: 18,
+    fontColor: textMaterial.color,
+    textAlign: 'justify-left',
+  });
+
+  container.add(text);
+  meshGroup.add(container);
+  group.add(meshGroup);
 
   const item: IItem = {
     uniforms,
@@ -83,6 +111,7 @@ export function createSectionItem(
     align,
     category,
     group,
+    meshGroup,
   };
 
   addCaption(item, data, fonts);

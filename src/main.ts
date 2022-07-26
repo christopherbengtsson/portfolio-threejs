@@ -1,6 +1,7 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
 import { Box3, Color, Group, Intersection, Texture, Vector2 } from 'three';
+import ThreeMeshUI from 'three-mesh-ui';
 import gsap from 'gsap';
 import TinyGesture from 'tinygesture';
 
@@ -139,11 +140,18 @@ function openItem(item: IItem) {
     x: 0,
     y: 0,
     ease: 'Expo.easeInOut',
-    onComplete: () => {
-      itemAnimating = false;
-      cursor.dataset.cursor = 'cross';
-    },
     duration: 1.5,
+  });
+
+  gsap.to(item.meshGroup.rotation, {
+    y: 3.15,
+    delay: 1.5,
+    ease: 'Expo.easeInOut',
+    duration: 1,
+    onComplete: () => {
+      cursor.dataset.cursor = 'cross';
+      itemAnimating = false;
+    },
   });
 
   gsap.to(item.uniforms.progress, {
@@ -248,6 +256,12 @@ function closeItem() {
   if (!itemAnimating && itemOpen) {
     itemAnimating = true;
     cursor.dataset.cursor = 'pointer';
+
+    gsap.to(itemOpen.meshGroup.rotation, {
+      y: 0,
+      ease: 'Expo.easeInOut',
+      duration: 0.5,
+    });
 
     gsap.to(itemOpen.group.position, {
       x: itemOpen.origPos.x,
@@ -637,6 +651,8 @@ const loop = () => {
   if (mode === 'development') {
     stats.update();
   }
+  
+  ThreeMeshUI.update();
 
   renderer.render(scene, camera);
   requestAnimationFrame(loop);

@@ -36,7 +36,7 @@ export const loadAssets = (categoryData: IAssets) => {
   }
 
   const fontLoader = new FontLoader();
-  const fonts = ['fonts/Roboto_Regular.json']; // TODO
+  const fonts = ['fonts/Roboto-Regular.json']; // TODO
 
   for (const font of fonts) {
     assetLoadPromises.push(

@@ -45,6 +45,7 @@ export interface IItem extends Partial<Object3D<Event>> {
   linkUnderline?: Mesh;
   linkBox?: IMesh;
   caption?: Mesh;
+  meshGroup: Group;
 }
 
 export interface ITexture extends Texture {
@@ -69,6 +70,7 @@ export interface IFileData {
       type: 'FILE' | 'COMPONENT';
       filename: string;
       filepath: string;
+      text: string;
       caption: string;
       link: string;
     };
@@ -77,6 +79,7 @@ export interface IFileData {
 export interface IData {
   filepath: string;
   filename: string;
+  text: string;
   caption: string;
   link: string;
 }
