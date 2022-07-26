@@ -145,7 +145,7 @@ function openItem(item: IItem) {
 
   gsap.to(item.meshGroup.rotation, {
     y: 3.15,
-    delay: 1.5,
+    delay: 0.7,
     ease: 'Expo.easeInOut',
     duration: 1,
     onComplete: () => {
