@@ -651,7 +651,7 @@ const loop = () => {
   if (mode === 'development') {
     stats.update();
   }
-  
+
   ThreeMeshUI.update();
 
   renderer.render(scene, camera);
@@ -679,7 +679,7 @@ function moveToStart() {
     },
   });
 
-  gsap.to(['.logo', '.social'], {
+  gsap.to('.social', {
     y: 0,
     delay: 1,
     ease: 'Expo.easeInOut',
