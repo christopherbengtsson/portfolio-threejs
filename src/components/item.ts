@@ -7,6 +7,7 @@ import {
   PlaneBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
+  Texture,
   Vector2,
 } from 'three';
 import ThreeMeshUI from 'three-mesh-ui';
@@ -81,13 +82,17 @@ export function createSectionItem(
   meshGroup.add(mesh);
 
   const container = new ThreeMeshUI.Block({
+    justifyContent: 'center',
     bestFit: 'shrink',
     width: mesh.scale.x,
     height: mesh.scale.y,
     fontFamily: 'fonts/Roboto-Regular-msdf.json',
     fontTexture: 'fonts/Roboto-Regular-msdf.png',
+    backgroundColor: textMaterial.color,
     backgroundOpacity: 0,
+    // backgroundTexture: mesh.material, // Add texture as background?
   });
+
   container.rotation.set(0, -3.15, 0);
 
   const text = new ThreeMeshUI.Text({
