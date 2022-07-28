@@ -7,7 +7,6 @@ import {
   PlaneBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
-  Texture,
   Vector2,
 } from 'three';
 import ThreeMeshUI from 'three-mesh-ui';
