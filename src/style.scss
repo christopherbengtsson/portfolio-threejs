@@ -27,6 +27,12 @@ canvas {
   z-index: 2;
 }
 
+.header {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+}
+
 .ready .loading .progress-percent {
   opacity: 0;
   visibility: hidden;
