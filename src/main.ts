@@ -21,6 +21,7 @@ import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
+import { createComputer } from './components/computer';
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -64,9 +65,9 @@ _assets.forEach((asset) => {
 });
 document.body.appendChild(renderer.domElement);
 preventPullToRefresh();
-
 const grid = new Group();
 scene.add(grid);
+createComputer();
 
 const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
