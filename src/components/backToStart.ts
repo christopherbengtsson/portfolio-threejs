@@ -9,8 +9,9 @@ import {
 } from 'three';
 import { renderer, sizes } from '../core/threejs/renderer';
 import gsap from 'gsap';
-import woosh from '../../assets/whoooosh.png';
-import arrowdown from '../../assets/arrowdown.png';
+import woosh from '../../assets/goback.svg';
+import arrowdown from '../../assets/arrowdown.svg';
+import { categoriesCommonConfig } from '../utils/categoriesCommonConfig';
 
 export function createBackToStartBtn() {
   const backToStart = new Group();
@@ -22,6 +23,7 @@ export function createBackToStartBtn() {
     map: backToStartTexture,
     transparent: true,
     depthWrite: false,
+    color: categoriesCommonConfig.end.textColor,
   });
   let backToStartGeom = new PlaneGeometry(1, 1);
   const circle = new Mesh(backToStartGeom, backToStartMaterial);
@@ -37,6 +39,7 @@ export function createBackToStartBtn() {
     transparent: true,
     side: DoubleSide,
     depthWrite: false,
+    color: categoriesCommonConfig.end.outlineTextColor,
   });
   let geom = new PlaneGeometry(1, 1);
   const arrow = new Mesh(geom, material);

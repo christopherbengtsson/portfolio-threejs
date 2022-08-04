@@ -46,8 +46,8 @@ let activeCategory = 'education';
 let remainingCategories: string[] = [];
 let intersects: Intersection<IObject3D>[] = [];
 let linkIntersect: Intersection<IObject3D>[] = [];
-let whooshIntersects: Intersection<IObject3D>[] = [];
-let hoveringWhoosh: boolean;
+let goBackIntersects: Intersection<IObject3D>[] = [];
+let hoveringGoBack: boolean;
 
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
@@ -127,7 +127,7 @@ for (const category in categoryData) {
 
   let positionOffset = CAMERA_POSITION;
   if (category === 'intro') positionOffset = 1700;
-  if( category === 'projects' ) positionOffset = 1500
+  if (category === 'projects') positionOffset = 1500;
   nextCategoryPos += bbox.min.z - positionOffset;
 
   grid.add(categorySections[category]);
@@ -378,7 +378,7 @@ function changeColours() {
       duration: 1,
     });
 
-    gsap.to([textMaterial.color], {
+    gsap.to(textMaterial.color, {
       r: textColor.r,
       g: textColor.g,
       b: textColor.b,
@@ -444,13 +444,16 @@ function mouseDown(e: MouseEvent) {
         intersects[0].object.onClick();
         cursor.dataset.cursor = 'cross';
       }
-    } else if (hoveringWhoosh) {
+    } else if (hoveringGoBack) {
       autoScroll.scrolling = true;
 
       gsap.to(autoScroll, {
         scrollPos: 0,
         ease: 'Expo.easeInOut',
-        duration: 4,
+        duration: 2,
+        onUpdate: () => {
+          autoScroll.scrolling = true;
+        },
       });
     } else {
       cursor.dataset.cursor = 'move';
@@ -493,20 +496,22 @@ function mouseMove(e: MouseEvent) {
 
   if (!itemOpen && !autoScroll.holdingMouseDown) {
     if (activeCategory === 'end') {
-      const whooshIntersectsGroup = categorySections['end'].children.find(
+      intersects = [];
+
+      const goBackIntersectsGroup = categorySections['end'].children.find(
         ({ name }) => name === 'backToStart'
       )!;
-      whooshIntersects = raycaster.intersectObjects(whooshIntersectsGroup.children);
+      goBackIntersects = raycaster.intersectObjects(goBackIntersectsGroup.children);
 
-      if (whooshIntersects.length > 0) {
+      if (goBackIntersects.length > 0) {
         cursor.dataset.cursor = 'none';
-        hoveringWhoosh = true;
-        whooshIntersectsGroup.userData.arrowGsap.timeScale(2);
+        hoveringGoBack = true;
+        goBackIntersectsGroup.userData.arrowGsap.timeScale(2);
       } else {
-        if (hoveringWhoosh) {
+        if (hoveringGoBack) {
           cursor.dataset.cursor = 'pointer';
-          hoveringWhoosh = false;
-          whooshIntersectsGroup.userData.arrowGsap.timeScale(1);
+          hoveringGoBack = false;
+          goBackIntersectsGroup.userData.arrowGsap.timeScale(1);
         }
       }
     } else {
@@ -518,15 +523,15 @@ function mouseMove(e: MouseEvent) {
         if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
       }
     }
+  }
 
-    if (itemOpen && itemOpen.linkBox) {
-      linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
+  if (itemOpen && itemOpen.linkBox) {
+    linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
 
-      if (linkIntersect.length > 0) {
-        cursor.dataset.cursor = 'eye';
-      } else if (cursor.dataset.cursor !== 'cross') {
-        cursor.dataset.cursor = 'cross';
-      }
+    if (linkIntersect.length > 0) {
+      cursor.dataset.cursor = 'eye';
+    } else if (cursor.dataset.cursor !== 'cross') {
+      cursor.dataset.cursor = 'cross';
     }
   }
 }
@@ -684,7 +689,7 @@ const loop = () => {
     }
   }
 
-  if (hoveringWhoosh) {
+  if (hoveringGoBack) {
     const backToStart = categorySections['end'].children.find(
       ({ name }) => name === 'backToStart'
     )!;
