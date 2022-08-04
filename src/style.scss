@@ -7,7 +7,7 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior-y: none;
-  background-color: #aec7c3;
+  background-color: #ffffff;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 
   * {
@@ -50,13 +50,13 @@ canvas {
   align-items: center;
   justify-content: center;
   font-family: 'Schnyder L Web';
-  color: #1b42d8;
+  color: #000000;
   font-size: 40px;
   z-index: 5;
   text-align: center;
 
   svg {
-    fill: #1b42d8;
+    fill: #000000;
   }
 
   h1 {
@@ -112,7 +112,7 @@ canvas {
     height: 100%;
     font-size: 30px;
     text-decoration: none;
-    color: #1b42d8;
+    color: #000000;
     opacity: 0;
     visibility: hidden;
     transform: scale(0);
@@ -146,7 +146,7 @@ canvas {
       fill: none;
 
       .line {
-        stroke: #1b42d8;
+        stroke: #000000;
         stroke-miterlimit: 10;
         stroke-width: 0.5;
         stroke-dashoffset: 252.363;
@@ -154,7 +154,7 @@ canvas {
       }
 
       .track {
-        stroke: rgba(#1b42d8, 0.2);
+        stroke: rgba(#000000, 0.2);
         stroke-miterlimit: 10;
         stroke-width: 0.5;
       }
@@ -198,7 +198,7 @@ main {
   pointer-events: none;
 
   svg {
-    fill: #1b42d8;
+    fill: #000000;
   }
 }
 
@@ -231,7 +231,7 @@ main {
 
   svg {
     fill: none;
-    stroke: #1b42d8;
+    stroke: #000000;
     stroke-miterlimit: 10;
     stroke-width: 12px;
   }

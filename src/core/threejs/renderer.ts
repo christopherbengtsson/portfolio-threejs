@@ -20,8 +20,8 @@ export const renderer = new WebGLRenderer({
 });
 
 export const scene = new Scene();
-scene.background = new Color(0xaec7c3);
-scene.fog = new Fog(0xaec7c3, 1400, 2000);
+scene.background = new Color(0xffffff);
+scene.fog = new Fog(0xffffff, 1400, 2000);
 scene.scale.set(scale, scale, 1);
 
 function updateRenderer() {
