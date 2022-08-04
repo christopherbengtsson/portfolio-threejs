@@ -1,4 +1,4 @@
-import { PerspectiveCamera, Raycaster, Vector2 } from 'three';
+import { Frustum, Matrix4, PerspectiveCamera, Raycaster, Vector2 } from 'three';
 import { sizes } from './renderer';
 
 export const CAMERA_POSITION = 800;
@@ -18,6 +18,10 @@ window.addEventListener('resize', () => {
 export const raycaster = new Raycaster();
 raycaster.far = camera.far;
 raycaster.near = camera.near;
+
+export const cameraViewProjectionMatrix = new Matrix4();
+
+export const frustum = new Frustum();
 
 export const mouse = new Vector2();
 export const mousePerspective = new Vector2();

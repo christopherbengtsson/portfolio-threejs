@@ -6,7 +6,15 @@ import gsap from 'gsap';
 import TinyGesture from 'tinygesture';
 
 import { mode, renderer, scale, scene, stats } from './core/threejs/renderer';
-import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs/camera';
+import {
+  camera,
+  cameraViewProjectionMatrix,
+  CAMERA_POSITION,
+  frustum,
+  mouse,
+  mousePerspective,
+  raycaster,
+} from './core/threejs/camera';
 import {
   textMaterial,
   textOutlineMaterial,
@@ -71,6 +79,7 @@ scene.add(grid);
 const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
 const sectionItemsMeshes: any[] = [];
+const videoItems: any[] = [];
 
 let itemIndexTotal = 0,
   nextCategoryPos = 0;
@@ -102,6 +111,10 @@ for (const category in categoryData) {
       categorySections[category].add(item.group);
       sectionItemsMeshes.push(item.mesh);
 
+      if (data.type === 'VIDEO') {
+        videoItems.push(item.mesh);
+      }
+
       itemIndex++;
       itemIndexTotal++;
     });
@@ -114,6 +127,7 @@ for (const category in categoryData) {
 
   let positionOffset = CAMERA_POSITION;
   if (category === 'intro') positionOffset = 1700;
+  if( category === 'projects' ) positionOffset = 1500
   nextCategoryPos += bbox.min.z - positionOffset;
 
   grid.add(categorySections[category]);
@@ -136,23 +150,28 @@ function openItem(item: IItem) {
     posOffset = categorySections[remainingCategories[remainingCategories.length - 2]].position.z;
   }
 
+  const onComplete = () => {
+    cursor.dataset.cursor = 'cross';
+    itemAnimating = false;
+  };
+
   gsap.to(item.group.position, {
     x: 0,
     y: 0,
     ease: 'Expo.easeInOut',
     duration: 1.5,
+    onComplete: item.meshGroup.children.length === 1 ? onComplete : () => {},
   });
 
-  gsap.to(item.meshGroup.rotation, {
-    y: 3.15,
-    delay: 0.7,
-    ease: 'Expo.easeInOut',
-    duration: 1,
-    onComplete: () => {
-      cursor.dataset.cursor = 'cross';
-      itemAnimating = false;
-    },
-  });
+  if (item.meshGroup.children.length > 1) {
+    gsap.to(item.meshGroup.rotation, {
+      y: 3.15,
+      delay: 0.7,
+      ease: 'Expo.easeInOut',
+      duration: 1,
+      onComplete,
+    });
+  }
 
   gsap.to(item.uniforms.progress, {
     value: 1,
@@ -612,6 +631,29 @@ function eyeCursorElLeave() {
   cursor.dataset.cursor = 'pointer';
 }
 
+function handleVideos() {
+  camera.updateMatrixWorld();
+  cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+  for (let i = 0; i < videoItems.length; i++) {
+    if (
+      frustum.intersectsObject(videoItems[i]) &&
+      videoItems[i].material.uniforms._texture.value.image.paused
+    ) {
+      videoItems[i].material.uniforms._texture.value.image.play();
+      continue;
+    }
+
+    if (
+      !frustum.intersectsObject(videoItems[i]) &&
+      !videoItems[i].material.uniforms._texture.value.image.paused
+    ) {
+      videoItems[i].material.uniforms._texture.value.image.pause();
+    }
+  }
+}
+
 const loop = () => {
   if (!touchEnabled && updatingPerspective) {
     updatePerspective();
@@ -630,6 +672,8 @@ const loop = () => {
 
     const delta = (autoScroll.scrollPos - grid.position.z) / 12;
     grid.position.z += delta;
+
+    if (Math.abs(delta) < 8) handleVideos();
 
     changeColours();
 

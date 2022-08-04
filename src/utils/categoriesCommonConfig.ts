@@ -16,8 +16,8 @@ export const categoriesCommonConfig: ICommonConfig = {
     tintColor: 0x012534,
     order: 2,
   },
-  bio: {
-    name: 'EDUCATION',
+  projects: {
+    name: 'PROJECTS',
     textColor: 0xf7cf7e,
     bgColor: 0x428884,
     tintColor: 0x428884,

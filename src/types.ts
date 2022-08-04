@@ -67,19 +67,20 @@ export interface ICommonConfig {
 export interface IFileData {
   [category: string]: {
     [filename: string]: {
-      type: 'FILE' | 'COMPONENT';
+      type: 'IMAGE' | 'VIDEO';
       filename: string;
       filepath: string;
-      text: string;
+      text?: string;
       caption: string;
       link: string;
     };
   };
 }
-export interface IData {
+export interface IData { // TODO: Duplicate
+  type: 'IMAGE' | 'VIDEO';
   filepath: string;
   filename: string;
-  text: string;
+  text?: string;
   caption: string;
   link: string;
 }

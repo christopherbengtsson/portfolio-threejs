@@ -53,14 +53,14 @@ export function createSectionItem(
   material.fog = true;
 
   const mesh = new Mesh(geometry, material);
-  mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
+  mesh.scale.set(textures[filename].userData.size!.x, textures[filename].userData.size!.y, 1);
 
   textures[filename].onUpdate = () => {
     if (
-      mesh.scale.x !== textures[filename].size!.x &&
-      mesh.scale.y !== textures[filename].size!.y
+      mesh.scale.x !== textures[filename].userData.size!.x &&
+      mesh.scale.y !== textures[filename].userData.size!.y
     ) {
-      mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
+      mesh.scale.set(textures[filename].userData.size!.x, textures[filename].userData.size!.y, 1);
     }
   };
 
@@ -80,6 +80,32 @@ export function createSectionItem(
   const meshGroup = new Group();
   meshGroup.add(mesh);
 
+  if (data.text) {
+    const container = addText(mesh, data);
+    meshGroup.add(container);
+  }
+
+  group.add(meshGroup);
+
+  const item: IItem = {
+    uniforms,
+    material,
+    geometry,
+    mesh,
+    origPos,
+    active: false,
+    align,
+    category,
+    group,
+    meshGroup,
+  };
+
+  addCaption(item, data, fonts);
+
+  return item;
+}
+
+function addText(mesh: Mesh, data: IData) {
   const container = new ThreeMeshUI.Block({
     justifyContent: 'center',
     bestFit: 'shrink',
@@ -102,25 +128,8 @@ export function createSectionItem(
   });
 
   container.add(text);
-  meshGroup.add(container);
-  group.add(meshGroup);
 
-  const item: IItem = {
-    uniforms,
-    material,
-    geometry,
-    mesh,
-    origPos,
-    active: false,
-    align,
-    category,
-    group,
-    meshGroup,
-  };
-
-  addCaption(item, data, fonts);
-
-  return item;
+  return container;
 }
 
 function addCaption(item: IItem, data: IData, fonts: TFonts) {
