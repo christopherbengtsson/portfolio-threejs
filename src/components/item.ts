@@ -122,7 +122,7 @@ function addText(mesh: Mesh, data: IData) {
 
   const text = new ThreeMeshUI.Text({
     content: data.text,
-    fontSize: 18,
+    fontSize: 24,
     fontColor: textMaterial.color,
     textAlign: 'justify-left',
   });
@@ -138,7 +138,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
   if (data.caption !== '') {
     const captionGeom = new TextGeometry(data.caption, {
       font: fonts['Roboto'],
-      size: 18,
+      size: 24,
       height: 0,
       curveSegments: 6,
     }).center();
@@ -155,14 +155,14 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
 
     let linkGeom = new TextGeometry('SEE MORE', {
       font: fonts['Roboto'],
-      size: 6,
+      size: 12,
       height: 0,
       curveSegments: 6,
     }).center();
 
     item.link = new Mesh(linkGeom, captionTextMaterial);
 
-    item.linkUnderline = new Mesh(new PlaneBufferGeometry(45, 1), linkUnderlineMaterial);
+    item.linkUnderline = new Mesh(new PlaneBufferGeometry(78, 1), linkUnderlineMaterial);
     item.linkUnderline.position.set(0, -10, 0);
 
     // for raycasting so it doesn't just pick up on letters

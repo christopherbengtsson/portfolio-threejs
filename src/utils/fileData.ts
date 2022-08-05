@@ -22,7 +22,7 @@ export const fileData: IFileData = {
       type: 'IMAGE',
       filepath: relight,
       filename: extractFilename(relight),
-      text: 'I was consulting as a frontend/process developer, integrating process-automation and low-code platforms such as K2 and OutSystems with technologies like Angular, SQL server and C#.\nRelight was a subsidiary company to Headlight before being acquired by HiQ.',
+      text: 'I was consulting as a frontend/process developer, integrating process-automation and low-code platforms such as K2 and OutSystems with technologies like Angular, SQL server and C#.\n\nRelight was a subsidiary company to Headlight before being acquired by HiQ.',
       caption: `Software developer 2018 - 2020`,
       link: 'https://relight.se',
     },
