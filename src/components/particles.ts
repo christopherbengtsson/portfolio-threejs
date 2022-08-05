@@ -12,10 +12,12 @@ import {
 import particleFrag from '../shaders/particle.frag';
 import particleVert from '../shaders/particle.vert';
 
+import sprite from '../../assets/spark1.png';
+
 export function createParticleSystem() {
   const shaderMaterial = new ShaderMaterial({
     uniforms: {
-      pointTexture: { value: new TextureLoader().load('assets/spark1.png') },
+      pointTexture: { value: new TextureLoader().load(sprite) },
     },
     vertexShader: particleVert,
     fragmentShader: particleFrag,

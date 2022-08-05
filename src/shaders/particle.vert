@@ -1,4 +1,4 @@
-	attribute float size;
+attribute float size;
 
 			varying vec3 vColor;
 
