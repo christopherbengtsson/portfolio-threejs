@@ -9,6 +9,7 @@ body {
   overscroll-behavior-y: none;
   background-color: #ffffff;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  font-family: 'Roboto', sans-serif;
 
   * {
     -webkit-touch-callout: none; /* iOS Safari */
@@ -49,7 +50,6 @@ canvas {
   height: 100%;
   align-items: center;
   justify-content: center;
-  font-family: 'Schnyder L Web';
   color: #000000;
   font-size: 40px;
   z-index: 5;
