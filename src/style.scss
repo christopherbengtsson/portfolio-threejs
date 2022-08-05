@@ -7,7 +7,7 @@ body {
   margin: 0;
   overflow: hidden;
   overscroll-behavior-y: none;
-  background-color: #ffffff;
+  background-color: #424A4E;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   font-family: 'Roboto', sans-serif;
 
@@ -50,13 +50,13 @@ canvas {
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: #000000;
+  color: #EBEBEB;
   font-size: 40px;
   z-index: 5;
   text-align: center;
 
   svg {
-    fill: #000000;
+    fill: #EBEBEB;
   }
 
   h1 {
@@ -112,7 +112,7 @@ canvas {
     height: 100%;
     font-size: 30px;
     text-decoration: none;
-    color: #000000;
+    color: #EBEBEB;
     opacity: 0;
     visibility: hidden;
     transform: scale(0);
@@ -146,7 +146,7 @@ canvas {
       fill: none;
 
       .line {
-        stroke: #000000;
+        stroke: #EBEBEB;
         stroke-miterlimit: 10;
         stroke-width: 0.5;
         stroke-dashoffset: 252.363;
@@ -154,7 +154,7 @@ canvas {
       }
 
       .track {
-        stroke: rgba(#000000, 0.2);
+        stroke: rgba(#EBEBEB, 0.2);
         stroke-miterlimit: 10;
         stroke-width: 0.5;
       }
@@ -198,7 +198,7 @@ main {
   pointer-events: none;
 
   svg {
-    fill: #000000;
+    fill: #EBEBEB;
   }
 }
 
@@ -231,7 +231,7 @@ main {
 
   svg {
     fill: none;
-    stroke: #000000;
+    stroke: #EBEBEB;
     stroke-miterlimit: 10;
     stroke-width: 12px;
   }

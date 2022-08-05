@@ -29,6 +29,7 @@ import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
+import { createParticleSystem } from './components/particles';
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -75,6 +76,9 @@ preventPullToRefresh();
 
 const grid = new Group();
 scene.add(grid);
+
+const particleSystem = createParticleSystem();
+scene.add(particleSystem);
 
 const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
@@ -166,7 +170,7 @@ function openItem(item: IItem) {
   if (item.meshGroup.children.length > 1) {
     gsap.to(item.meshGroup.rotation, {
       y: 3.15,
-      delay: 0.7,
+      delay: 1.4,
       ease: 'Expo.easeInOut',
       duration: 1,
       onComplete,

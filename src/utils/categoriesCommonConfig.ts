@@ -22,12 +22,12 @@ import { ICommonConfig } from '../types';
 //   }
 // }
 
-export const initialColor = 0x000000;
+export const initialColor = 0xEBEBEB;
 export const categoriesCommonConfig: ICommonConfig = {
   intro: {
     textColor: initialColor,
     outlineTextColor: initialColor,
-    bgColor: 0xffffff,
+    bgColor: 0x424A4E,
     tintColor: initialColor,
     order: 1,
   },
