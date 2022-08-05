@@ -9,8 +9,8 @@ import {
   TextureLoader,
 } from 'three';
 
-import particleFrag from '../shaders/particle_frag.frag';
-import particleVert from '../shaders/particle_vert.vert';
+import particleFrag from '../shaders/particle.frag';
+import particleVert from '../shaders/particle.vert';
 
 export function createParticleSystem() {
   const shaderMaterial = new ShaderMaterial({
