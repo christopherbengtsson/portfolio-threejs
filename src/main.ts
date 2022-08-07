@@ -29,7 +29,7 @@ import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
-import { createParticleSystem } from './components/particles';
+import { animateParticles, particleSystem } from './components/particles';
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -77,7 +77,6 @@ preventPullToRefresh();
 const grid = new Group();
 scene.add(grid);
 
-const particleSystem = createParticleSystem();
 scene.add(particleSystem);
 
 const categorySections: { [key: string]: Group } = {};
@@ -675,11 +674,11 @@ const loop = () => {
   }
 
   // smooth scrolling
+  const delta = (autoScroll.scrollPos - grid.position.z) / 12;
   if (autoScroll.allowScrolling && autoScroll.scrolling) {
     if (autoScroll.scrollPos <= 0) autoScroll.scrollPos = 0;
     if (autoScroll.scrollPos >= -stopScrollPos) autoScroll.scrollPos = -stopScrollPos;
 
-    const delta = (autoScroll.scrollPos - grid.position.z) / 12;
     grid.position.z += delta;
 
     if (Math.abs(delta) < 8) handleVideos();
@@ -700,6 +699,8 @@ const loop = () => {
     const circle = backToStart.children.find(({ name }) => name === 'circle')!;
     circle.rotation.z += 0.005;
   }
+
+  animateParticles(autoScroll.scrolling, delta);
 
   if (mode === 'development') {
     stats.update();

@@ -14,7 +14,10 @@ import particleVert from '../shaders/particle.vert';
 
 import sprite from '../../assets/spark1.png';
 
-export function createParticleSystem() {
+const particles = 5000;
+export const particleSystem = createParticleSystem();
+
+function createParticleSystem() {
   const shaderMaterial = new ShaderMaterial({
     uniforms: {
       pointTexture: { value: new TextureLoader().load(sprite) },
@@ -26,8 +29,8 @@ export function createParticleSystem() {
     transparent: true,
     vertexColors: true,
   });
+
   const geometry = new BufferGeometry();
-  const particles = 5000;
   const radius = 600;
   const positions: number[] = [];
   const colors: number[] = [];
@@ -51,4 +54,16 @@ export function createParticleSystem() {
   geometry.setAttribute('size', new Float32BufferAttribute(sizes, 1).setUsage(DynamicDrawUsage));
 
   return new Points(geometry, shaderMaterial);
+}
+
+export function animateParticles(isScrolling: boolean, delta: number) {
+  if (isScrolling) particleSystem.rotation.z -= delta / 10000;
+
+  const time = (Date.now() * 0.005) / 2;
+  const sizes = particleSystem.geometry.attributes.size.array as Array<number>;
+
+  for (let i = 0; i < particles; i++) {
+    sizes[i] = 5 * (1 + Math.sin(0.1 * i + time));
+  }
+  particleSystem.geometry.attributes.size.needsUpdate = true;
 }
