@@ -146,6 +146,7 @@ function openItem(item: IItem) {
   itemOpen = item;
   origGridPos = grid.position.z;
   autoScroll.allowScrolling = false;
+  autoScroll.scrolling = false;
 
   let posOffset = categorySections[activeCategory].position.z;
 
@@ -700,7 +701,7 @@ const loop = () => {
     circle.rotation.z += 0.005;
   }
 
-  animateParticles(autoScroll.scrolling, delta);
+  animateParticles(autoScroll.scrolling && autoScroll.allowScrolling, delta);
 
   if (mode === 'development') {
     stats.update();
