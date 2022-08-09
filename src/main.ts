@@ -1,11 +1,10 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { Box3, Color, Group, Intersection, Texture, Vector2 } from 'three';
+import { Box3, Color, Group, Intersection, Texture } from 'three';
 import ThreeMeshUI from 'three-mesh-ui';
-import gsap from 'gsap';
 import TinyGesture from 'tinygesture';
 
-import { mode, renderer, scale, scene, stats } from './core/threejs/renderer';
+import { mode, renderer, scene, stats } from './core/threejs/renderer';
 import {
   camera,
   cameraViewProjectionMatrix,
@@ -15,21 +14,28 @@ import {
   mousePerspective,
   raycaster,
 } from './core/threejs/camera';
-import {
-  textMaterial,
-  textOutlineMaterial,
-  captionTextMaterial,
-  linkUnderlineMaterial,
-} from './core/threejs/materials';
+import { captionTextMaterial, linkUnderlineMaterial } from './core/threejs/materials';
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
-import { cursor, cursorSvgs, mainSvgs } from './core/dom';
+import { cursor } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
 import { animateParticles, particleSystem } from './components/particles';
+
+import {
+  animateItemOpen,
+  animateItemClose,
+  animateColors,
+  animateAutoScroll,
+  animateScrollToStart,
+  stopAutoScrollAnimation,
+  animateCursor,
+  animateMoveToStart,
+  animatePerspective,
+} from './gsapAnimations';
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -61,7 +67,6 @@ const texturesAndFonts: ITexturesAndFonts = {
   fonts: {},
 };
 
-// TODO: Cache assets and timeout for loader
 const categoryData = generateConfig();
 const _assets = await loadAssets(categoryData);
 _assets.forEach((asset) => {
@@ -141,7 +146,6 @@ for (const category in categoryData) {
 }
 
 function openItem(item: IItem) {
-  // TODO: Repetitive code
   itemAnimating = true;
   itemOpen = item;
   origGridPos = grid.position.z;
@@ -154,125 +158,12 @@ function openItem(item: IItem) {
     posOffset = categorySections[remainingCategories[remainingCategories.length - 2]].position.z;
   }
 
-  const onComplete = () => {
+  const onAnimationComplete = () => {
     cursor.dataset.cursor = 'cross';
     itemAnimating = false;
   };
 
-  gsap.to(item.group.position, {
-    x: 0,
-    y: 0,
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-    onComplete: item.meshGroup.children.length === 1 ? onComplete : () => {},
-  });
-
-  if (item.meshGroup.children.length > 1) {
-    gsap.to(item.meshGroup.rotation, {
-      y: 3.15,
-      delay: 1.4,
-      ease: 'Expo.easeInOut',
-      duration: 1,
-      onComplete,
-    });
-  }
-
-  gsap.to(item.uniforms.progress, {
-    value: 1,
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-  });
-
-  gsap.to(grid.position, {
-    z: -(posOffset - -item.group.position.z) + (scale < 0.5 ? 450 : 300),
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-  });
-
-  gsap.to(textMaterial, {
-    opacity: 0,
-    ease: 'Expo.easeInOut',
-    duration: 1,
-    onComplete: () => {
-      textMaterial.visible = false;
-    },
-  });
-
-  gsap.to(captionTextMaterial, {
-    delay: 0.3,
-    opacity: 1,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-    onStart: () => {
-      captionTextMaterial.visible = true;
-    },
-  });
-
-  gsap.to(linkUnderlineMaterial, {
-    opacity: 0.4,
-    ease: 'Expo.easeInOut',
-    delay: 0.3,
-    duration: 2,
-    onStart: () => {
-      linkUnderlineMaterial.visible = true;
-    },
-  });
-
-  if (item.caption) {
-    gsap.fromTo(
-      item.caption.position,
-      { z: -100 },
-      {
-        z: 0,
-        delay: 0.2,
-        ease: 'Expo.easeInOut',
-        duration: 2,
-        onStart: () => {
-          item.caption!.visible = true;
-        },
-      }
-    );
-  }
-
-  if (item.linkGroup) {
-    gsap.fromTo(
-      item.linkGroup.position,
-      { z: -100 },
-      {
-        z: 0,
-        delay: 0.3,
-        ease: 'Expo.easeInOut',
-        duration: 2,
-        onStart: () => {
-          item.linkGroup!.visible = true;
-        },
-      }
-    );
-  }
-
-  const position = new Vector2();
-
-  for (let itemKey in sectionItems) {
-    if (sectionItems[itemKey].align === 0) position.set(-700, 700); // bottom left
-    if (sectionItems[itemKey].align === 1) position.set(700, 700); // bottom right
-    if (sectionItems[itemKey].align === 2) position.set(700, -700); // top right
-    if (sectionItems[itemKey].align === 3) position.set(-700, -700); // top left
-
-    if (sectionItems[itemKey] === item) continue;
-
-    gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
-      value: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.3,
-    });
-
-    gsap.to(sectionItems[itemKey].group.position, {
-      x: position.x,
-      y: position.y,
-      ease: 'Expo.easeInOut',
-      duration: 1.3,
-    });
-  }
+  animateItemOpen(item, onAnimationComplete, posOffset, grid, sectionItems);
 }
 
 function closeItem() {
@@ -280,79 +171,32 @@ function closeItem() {
     itemAnimating = true;
     cursor.dataset.cursor = 'pointer';
 
-    gsap.to(itemOpen.meshGroup.rotation, {
-      y: 0,
-      ease: 'Expo.easeInOut',
-      duration: 0.5,
-    });
+    const onGridScrollAnimationComplete = () => {
+      autoScroll.allowScrolling = true;
+      itemOpen = null;
+      itemAnimating = false;
+    };
+    const onMaterialsOpacityAnimationComplete = () => {
+      captionTextMaterial.visible = false;
+      linkUnderlineMaterial.visible = false;
+      if (itemOpen.caption) itemOpen.caption.visible = false;
+      if (itemOpen.linkGroup) itemOpen.linkGroup.visible = false;
+    };
 
-    gsap.to(itemOpen.group.position, {
-      x: itemOpen.origPos.x,
-      y: itemOpen.origPos.y,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(grid.position, {
-      z: origGridPos,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-      onComplete: () => {
-        autoScroll.allowScrolling = true;
-        itemOpen = null;
-        itemAnimating = false;
-      },
-    });
-
-    gsap.to(itemOpen.uniforms.progress, {
-      value: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(textMaterial, {
-      opacity: 1,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-      onStart: () => {
-        textMaterial.visible = true;
-      },
-    });
-
-    gsap.to([captionTextMaterial, linkUnderlineMaterial], {
-      opacity: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1,
-      onComplete: () => {
-        captionTextMaterial.visible = false;
-        linkUnderlineMaterial.visible = false;
-        if (itemOpen.caption) itemOpen.caption.visible = false;
-        if (itemOpen.linkGroup) itemOpen.linkGroup.visible = false;
-      },
-    });
-
-    for (const itemKey in sectionItems) {
-      if (sectionItems[itemKey].active) continue;
-
-      gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
-        value: 1,
-        ease: 'Expo.easeInOut',
-        duration: 1.5,
-      });
-
-      gsap.to(sectionItems[itemKey].group.position, {
-        x: sectionItems[itemKey].origPos.x,
-        y: sectionItems[itemKey].origPos.y,
-        ease: 'Expo.easeInOut',
-        duration: 1.5,
-      });
-    }
+    animateItemClose(
+      itemOpen,
+      grid,
+      origGridPos,
+      sectionItems,
+      onGridScrollAnimationComplete,
+      onMaterialsOpacityAnimationComplete
+    );
   }
 }
 
 function changeColours() {
   remainingCategories = Object.keys(categoryPositions).filter((key) => {
-    return grid.position.z > -categoryPositions[key]; // TODO: look into detecting if exists in camera
+    return grid.position.z > -categoryPositions[key];
   });
 
   if (
@@ -361,68 +205,12 @@ function changeColours() {
   ) {
     activeCategory = remainingCategories[remainingCategories.length - 1];
 
-    let bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
-    let textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
-    let tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
-    let interfaceColor: string;
+    const activeCategoryOutlineColor = categoriesCommonConfig[activeCategory].outlineTextColor;
+    const bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
+    const textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
+    const tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
 
-    gsap.to(scene.fog!.color, {
-      r: bgColor.r,
-      g: bgColor.g,
-      b: bgColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.to(scene.background, {
-      r: bgColor.r,
-      g: bgColor.g,
-      b: bgColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.to(textMaterial.color, {
-      r: textColor.r,
-      g: textColor.g,
-      b: textColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.set([captionTextMaterial.color, linkUnderlineMaterial.color], {
-      r: textColor.r,
-      g: textColor.g,
-      b: textColor.b,
-    });
-
-    for (let id in sectionItems) {
-      gsap.to(sectionItems[id].uniforms.gradientColor.value as Color, {
-        r: tintColor.r,
-        g: tintColor.g,
-        b: tintColor.b,
-        ease: 'Power4.easeOut',
-        duration: 1,
-      });
-    }
-
-    if (categoriesCommonConfig[activeCategory].outlineTextColor) {
-      const outlineTextColor = new Color(categoriesCommonConfig[activeCategory].outlineTextColor);
-      interfaceColor = outlineTextColor.getHexString();
-
-      gsap.to([textOutlineMaterial.color], {
-        r: outlineTextColor.r,
-        g: outlineTextColor.g,
-        b: outlineTextColor.b,
-        ease: 'Power4.easeOut',
-        duration: 1,
-      });
-    } else {
-      interfaceColor = textColor.getHexString();
-    }
-
-    gsap.to(mainSvgs, { fill: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
-    gsap.to(cursorSvgs, { stroke: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
+    animateColors(bgColor, textColor, tintColor, activeCategoryOutlineColor, sectionItems);
 
     document
       .querySelector('meta[name=theme-color]')!
@@ -451,22 +239,14 @@ function mouseDown(e: MouseEvent) {
     } else if (hoveringGoBack) {
       autoScroll.scrolling = true;
 
-      gsap.to(autoScroll, {
-        scrollPos: 0,
-        ease: 'Expo.easeInOut',
-        duration: 2,
-        onUpdate: () => {
-          autoScroll.scrolling = true;
-        },
-      });
+      const onUpdate = () => {
+        autoScroll.scrolling = true;
+      };
+
+      animateScrollToStart(autoScroll, onUpdate);
     } else {
       cursor.dataset.cursor = 'move';
-
-      gsap.to(autoScroll, {
-        delay: 0.7,
-        autoMoveSpeed: 20,
-        duration: 0.5,
-      });
+      animateAutoScroll(autoScroll);
     }
   }
 }
@@ -474,7 +254,7 @@ function mouseDown(e: MouseEvent) {
 function mouseUp() {
   if (!itemOpen) cursor.dataset.cursor = 'pointer';
   autoScroll.holdingMouseDown = false;
-  gsap.killTweensOf(autoScroll, { autoMoveSpeed: true });
+  stopAutoScrollAnimation(autoScroll);
   autoScroll.autoMoveSpeed = 0;
 }
 
@@ -484,12 +264,7 @@ function mouseMove(e: MouseEvent) {
   updatingPerspective = true;
 
   if (!touchEnabled) {
-    gsap.to('.cursor', {
-      x: e.clientX,
-      y: e.clientY,
-      ease: 'Power4.easeOut',
-      duration: 1.5,
-    });
+    animateCursor(e.clientX, e.clientY);
   }
 
   if (!renderer || e.target !== renderer.domElement) return;
@@ -558,7 +333,7 @@ function initListeners() {
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
 
-  document.querySelector('.enter')?.addEventListener('click', moveToStart, false);
+  document.querySelector('.enter')?.addEventListener('click', animateMoveToStart, false);
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
@@ -610,24 +385,11 @@ function preventPullToRefresh() {
 }
 
 function updatePerspective() {
-  gsap.to(camera.rotation, {
-    x: -mousePerspective.y * 0.5,
-    y: -mousePerspective.x * 0.5,
-    ease: 'Power4.easeOut',
-    duration: 4,
-  });
-
   const backToStart = categorySections['end'].children.find(({ name }) => name === 'backToStart')!;
   const arrow = backToStart.children.find(({ name }) => name === 'arrow')!;
+  const lastCategory = activeCategory === 'end';
 
-  if (activeCategory === 'end') {
-    gsap.to(arrow.rotation, {
-      x: -1.5 + mousePerspective.y * 0.2,
-      y: mousePerspective.x * 0.8,
-      ease: 'Power4.easeOut',
-      duration: 4,
-    });
-  }
+  animatePerspective(mousePerspective.y, mousePerspective.x, lastCategory, arrow);
 
   updatingPerspective = false;
 }
@@ -717,27 +479,3 @@ loop();
 initListeners();
 initCursorListeners();
 document.body.classList.add('ready');
-
-function moveToStart() {
-  gsap.to(camera.position, {
-    y: 0,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-  });
-
-  gsap.to('.loading', {
-    y: '-100%',
-    ease: 'Expo.easeInOut',
-    duration: 2,
-    onComplete: () => {
-      (document.querySelector('.loading') as HTMLElement).style.display = 'none';
-    },
-  });
-
-  gsap.to('.social', {
-    y: 0,
-    delay: 1,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-  });
-}

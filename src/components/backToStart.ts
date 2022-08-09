@@ -52,7 +52,6 @@ export function createBackToStartBtn() {
   if (sizes.width < 600) backToStart.scale.set(1.5, 1.5, 1);
 
   backToStart.userData = {
-    bajs: true,
     arrowGsap: gsap.to(arrow.position, {
       z: 0,
       repeat: -1,
