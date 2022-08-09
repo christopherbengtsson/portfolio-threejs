@@ -61,6 +61,7 @@ export interface ICommonConfig {
     tintColor: number;
     outlineTextColor?: number;
     order: number;
+    positionOffset?: number;
   };
 }
 
@@ -76,7 +77,8 @@ export interface IFileData {
     };
   };
 }
-export interface IData { // TODO: Duplicate
+export interface IData {
+  // TODO: Duplicate
   type: 'IMAGE' | 'VIDEO';
   filepath: string;
   filename: string;

@@ -22,14 +22,15 @@ import { ICommonConfig } from '../types';
 //   }
 // }
 
-export const initialColor = 0xEBEBEB;
+export const initialColor = 0xebebeb;
 export const categoriesCommonConfig: ICommonConfig = {
   intro: {
     textColor: initialColor,
     outlineTextColor: initialColor,
-    bgColor: 0x424A4E,
+    bgColor: 0x424a4e,
     tintColor: initialColor,
     order: 1,
+    positionOffset: 1700,
   },
   experience: {
     name: 'EXPERIENCE',
@@ -43,6 +44,7 @@ export const categoriesCommonConfig: ICommonConfig = {
     textColor: 0xffd662,
     bgColor: 0x00539c,
     tintColor: 0x00539c,
+    positionOffset: 1500,
     order: 3,
   },
   end: {

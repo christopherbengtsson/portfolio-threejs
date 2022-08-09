@@ -44,7 +44,7 @@ let autoScroll = {
   scrolling: false,
   allowScrolling: true,
 };
-let stopScrollPos: number;
+let stopScrollPosition: number;
 let itemOpen: any = null;
 let itemAnimating = false;
 let origGridPos: any;
@@ -55,6 +55,11 @@ let intersects: Intersection<IObject3D>[] = [];
 let linkIntersect: Intersection<IObject3D>[] = [];
 let goBackIntersects: Intersection<IObject3D>[] = [];
 let hoveringGoBack: boolean;
+
+const categorySections: { [key: string]: Group } = {};
+const sectionItems: { [key: string]: IItem } = {};
+const sectionItemsMeshes: any[] = [];
+const videoItems: any[] = [];
 
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
@@ -76,72 +81,71 @@ _assets.forEach((asset) => {
     texturesAndFonts.fonts[(asset as any).data.familyName] = asset as Font;
   }
 });
+
 document.body.appendChild(renderer.domElement);
 preventPullToRefresh();
 
 const grid = new Group();
 scene.add(grid);
-
 scene.add(particleSystem);
 
-const categorySections: { [key: string]: Group } = {};
-const sectionItems: { [key: string]: IItem } = {};
-const sectionItemsMeshes: any[] = [];
-const videoItems: any[] = [];
+function createPortfolio() {
+  let itemIndexTotal = 0,
+    nextCategoryPosition = 0;
 
-let itemIndexTotal = 0,
-  nextCategoryPos = 0;
+  for (const category in categoryData) {
+    const categoryGroup = new Group();
 
-for (const category in categoryData) {
-  categorySections[category] = new Group();
+    if (category === 'intro') {
+      categoryGroup.add(...createIntroSection(texturesAndFonts));
+    } else if (category === 'end') {
+      categoryGroup.add(...createEndSection(texturesAndFonts));
+    } else {
+      categoryGroup.add(...createGenericSection(category, texturesAndFonts));
 
-  if (category === 'intro') {
-    categorySections[category].add(...createIntroSection(texturesAndFonts));
-  } else if (category === 'end') {
-    categorySections[category].add(...createEndSection(texturesAndFonts));
-  } else {
-    categorySections[category].add(...createGenericSection(category, texturesAndFonts));
+      let itemIndex = 0;
+      categoryData[category].data.forEach(({ filename, ...data }) => {
+        const item = createSectionItem(
+          texturesAndFonts,
+          category,
+          { filename, ...data },
+          filename,
+          itemIndexTotal,
+          itemIndex
+        );
 
-    let itemIndex = 0;
-    categoryData[category].data.forEach(({ filename, ...data }) => {
-      const item = createSectionItem(
-        texturesAndFonts,
-        category,
-        { filename, ...data },
-        filename,
-        itemIndexTotal,
-        itemIndex
-      );
+        item.mesh.onClick = () => openItem(item);
+        sectionItems[filename] = item;
 
-      item.mesh.onClick = () => openItem(item);
-      sectionItems[filename] = item;
+        categoryGroup.add(item.group);
+        sectionItemsMeshes.push(item.mesh);
 
-      categorySections[category].add(item.group);
-      sectionItemsMeshes.push(item.mesh);
+        if (data.type === 'VIDEO') {
+          videoItems.push(item.mesh);
+        }
 
-      if (data.type === 'VIDEO') {
-        videoItems.push(item.mesh);
-      }
+        itemIndex++;
+        itemIndexTotal++;
+      });
+    }
 
-      itemIndex++;
-      itemIndexTotal++;
-    });
-  }
+    const bbox = new Box3().setFromObject(categoryGroup);
 
-  const bbox = new Box3().setFromObject(categorySections[category]);
+    const categoryOffset = 1100;
+    categoryGroup.position.z = nextCategoryPosition;
+    categoryPositions[category] = nextCategoryPosition + categoryOffset;
 
-  categorySections[category].position.z = nextCategoryPos;
-  categoryPositions[category] = nextCategoryPos + 1100;
+    const customOffset = categoryData[category].positionOffset;
+    const positionOffset = customOffset ? customOffset : CAMERA_POSITION;
 
-  let positionOffset = CAMERA_POSITION;
-  if (category === 'intro') positionOffset = 1700;
-  if (category === 'projects') positionOffset = 1500;
-  nextCategoryPos += bbox.min.z - positionOffset;
+    nextCategoryPosition += bbox.min.z - positionOffset;
 
-  grid.add(categorySections[category]);
+    if (category === 'end') {
+      stopScrollPosition = categoryGroup.position.z;
+    }
 
-  if (category === 'end') {
-    stopScrollPos = categorySections[category].position.z;
+    categorySections[category] = categoryGroup;
+    grid.add(categoryGroup);
   }
 }
 
@@ -159,7 +163,7 @@ function openItem(item: IItem) {
   }
 
   const onAnimationComplete = () => {
-    cursor.dataset.cursor = 'cross';
+    eyeCursorElClose();
     itemAnimating = false;
   };
 
@@ -169,7 +173,7 @@ function openItem(item: IItem) {
 function closeItem() {
   if (!itemAnimating && itemOpen) {
     itemAnimating = true;
-    cursor.dataset.cursor = 'pointer';
+    eyeCursorElLeave();
 
     const onGridScrollAnimationComplete = () => {
       autoScroll.allowScrolling = true;
@@ -224,35 +228,38 @@ function mouseDown(e: MouseEvent) {
 
   autoScroll.holdingMouseDown = true;
 
+  // Close item or item link click
   if (itemOpen) {
-    if (linkIntersect.length > 0) {
-      if (linkIntersect[0].object.onClick) linkIntersect[0].object.onClick();
-    } else {
-      closeItem();
-    }
-  } else {
-    if (intersects.length > 0) {
-      if (intersects[0].object.onClick) {
-        intersects[0].object.onClick();
-        cursor.dataset.cursor = 'cross';
-      }
-    } else if (hoveringGoBack) {
-      autoScroll.scrolling = true;
-
-      const onUpdate = () => {
-        autoScroll.scrolling = true;
-      };
-
-      animateScrollToStart(autoScroll, onUpdate);
-    } else {
-      cursor.dataset.cursor = 'move';
-      animateAutoScroll(autoScroll);
-    }
+    linkIntersect.length === 0 ? closeItem() : linkIntersect[0]?.object.onClick?.();
+    return;
   }
+
+  // Open item
+  if (intersects.length > 0 && intersects[0].object.onClick) {
+    intersects[0].object.onClick();
+    eyeCursorElClose();
+
+    return;
+  }
+
+  // Back to start button
+  if (hoveringGoBack) {
+    autoScroll.scrolling = true;
+
+    const onUpdate = () => {
+      autoScroll.scrolling = true;
+    };
+
+    return animateScrollToStart(autoScroll, onUpdate);
+  }
+
+  // Autoscroll
+  eyeCursorElMove();
+  animateAutoScroll(autoScroll);
 }
 
 function mouseUp() {
-  if (!itemOpen) cursor.dataset.cursor = 'pointer';
+  if (!itemOpen) eyeCursorElLeave();
   autoScroll.holdingMouseDown = false;
   stopAutoScrollAnimation(autoScroll);
   autoScroll.autoMoveSpeed = 0;
@@ -283,12 +290,12 @@ function mouseMove(e: MouseEvent) {
       goBackIntersects = raycaster.intersectObjects(goBackIntersectsGroup.children);
 
       if (goBackIntersects.length > 0) {
-        cursor.dataset.cursor = 'none';
+        eyeCursorElClick();
         hoveringGoBack = true;
         goBackIntersectsGroup.userData.arrowGsap.timeScale(2);
       } else {
         if (hoveringGoBack) {
-          cursor.dataset.cursor = 'pointer';
+          eyeCursorElLeave();
           hoveringGoBack = false;
           goBackIntersectsGroup.userData.arrowGsap.timeScale(1);
         }
@@ -297,9 +304,9 @@ function mouseMove(e: MouseEvent) {
       intersects = raycaster.intersectObjects(sectionItemsMeshes);
 
       if (intersects.length > 0) {
-        cursor.dataset.cursor = 'eye';
+        eyeCursorElEnter();
       } else {
-        if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
+        if (cursor.dataset.cursor !== 'default') eyeCursorElLeave();
       }
     }
   }
@@ -308,9 +315,9 @@ function mouseMove(e: MouseEvent) {
     linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
 
     if (linkIntersect.length > 0) {
-      cursor.dataset.cursor = 'eye';
+      eyeCursorElClick();
     } else if (cursor.dataset.cursor !== 'cross') {
-      cursor.dataset.cursor = 'cross';
+      eyeCursorElClose();
     }
   }
 }
@@ -349,7 +356,7 @@ function initListeners() {
   });
 
   if (!touchEnabled) {
-    cursor.dataset.cursor = 'pointer';
+    eyeCursorElLeave();
   }
 }
 
@@ -394,12 +401,27 @@ function updatePerspective() {
   updatingPerspective = false;
 }
 
+function eyeCursorElNone() {
+  cursor.dataset.cursor = 'none';
+}
+
+function eyeCursorElMove() {
+  cursor.dataset.cursor = 'move';
+}
+
+function eyeCursorElClose() {
+  cursor.dataset.cursor = 'cross';
+}
+
 function eyeCursorElEnter() {
   cursor.dataset.cursor = 'eye';
 }
+function eyeCursorElClick() {
+  cursor.dataset.cursor = 'pointer';
+}
 
 function eyeCursorElLeave() {
-  cursor.dataset.cursor = 'pointer';
+  cursor.dataset.cursor = 'default';
 }
 
 function handleVideos() {
@@ -440,7 +462,7 @@ const loop = () => {
   const delta = (autoScroll.scrollPos - grid.position.z) / 12;
   if (autoScroll.allowScrolling && autoScroll.scrolling) {
     if (autoScroll.scrollPos <= 0) autoScroll.scrollPos = 0;
-    if (autoScroll.scrollPos >= -stopScrollPos) autoScroll.scrollPos = -stopScrollPos;
+    if (autoScroll.scrollPos >= -stopScrollPosition) autoScroll.scrollPos = -stopScrollPosition;
 
     grid.position.z += delta;
 
@@ -475,6 +497,7 @@ const loop = () => {
   requestAnimationFrame(loop);
 };
 
+createPortfolio();
 loop();
 initListeners();
 initCursorListeners();
