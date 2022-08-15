@@ -53,14 +53,14 @@ export function createSectionItem(
   material.fog = true;
 
   const mesh = new Mesh(geometry, material);
-  mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
+  mesh.scale.set(textures[filename].userData.size!.x, textures[filename].userData.size!.y, 1);
 
   textures[filename].onUpdate = () => {
     if (
-      mesh.scale.x !== textures[filename].size!.x &&
-      mesh.scale.y !== textures[filename].size!.y
+      mesh.scale.x !== textures[filename].userData.size!.x &&
+      mesh.scale.y !== textures[filename].userData.size!.y
     ) {
-      mesh.scale.set(textures[filename].size!.x, textures[filename].size!.y, 1);
+      mesh.scale.set(textures[filename].userData.size!.x, textures[filename].userData.size!.y, 1);
     }
   };
 
@@ -80,29 +80,11 @@ export function createSectionItem(
   const meshGroup = new Group();
   meshGroup.add(mesh);
 
-  const container = new ThreeMeshUI.Block({
-    justifyContent: 'center',
-    bestFit: 'shrink',
-    width: mesh.scale.x,
-    height: mesh.scale.y,
-    fontFamily: 'fonts/Roboto-Regular-msdf.json',
-    fontTexture: 'fonts/Roboto-Regular-msdf.png',
-    backgroundColor: textMaterial.color,
-    backgroundOpacity: 0,
-    // backgroundTexture: mesh.material, // Add texture as background?
-  });
+  if (data.text) {
+    const container = addText(mesh, data);
+    meshGroup.add(container);
+  }
 
-  container.rotation.set(0, -3.15, 0);
-
-  const text = new ThreeMeshUI.Text({
-    content: data.text,
-    fontSize: 18,
-    fontColor: textMaterial.color,
-    textAlign: 'justify-left',
-  });
-
-  container.add(text);
-  meshGroup.add(container);
   group.add(meshGroup);
 
   const item: IItem = {
@@ -123,13 +105,38 @@ export function createSectionItem(
   return item;
 }
 
-function addCaption(item: IItem, data: IData, fonts: TFonts) {
-  if (data.caption === '' && data.link === '') return;
+function addText(mesh: Mesh, data: IData) {
+  const container = new ThreeMeshUI.Block({
+    justifyContent: 'center',
+    bestFit: 'shrink',
+    width: mesh.scale.x,
+    height: mesh.scale.y,
+    fontFamily: 'fonts/Roboto-Regular-msdf.json',
+    fontTexture: 'fonts/Roboto-Regular-msdf.png',
+    backgroundColor: textMaterial.color,
+    backgroundOpacity: 0,
+    // backgroundTexture: mesh.material, // Add texture as background?
+  });
 
-  if (data.caption !== '') {
+  container.rotation.set(0, -3.15, 0);
+
+  const text = new ThreeMeshUI.Text({
+    content: data.text,
+    fontSize: 24,
+    fontColor: textMaterial.color,
+    textAlign: 'justify-left',
+  });
+
+  container.add(text);
+
+  return container;
+}
+
+function addCaption(item: IItem, data: IData, fonts: TFonts) {
+  if (!!data.caption) {
     const captionGeom = new TextGeometry(data.caption, {
       font: fonts['Roboto'],
-      size: 18,
+      size: 24,
       height: 0,
       curveSegments: 6,
     }).center();
@@ -141,19 +148,19 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     item.caption = caption;
     item.group.add(caption);
   }
-  if (data.link !== '') {
+  if (!!data.link) {
     item.linkGroup = new Group();
 
     let linkGeom = new TextGeometry('SEE MORE', {
       font: fonts['Roboto'],
-      size: 6,
+      size: 12,
       height: 0,
       curveSegments: 6,
     }).center();
 
     item.link = new Mesh(linkGeom, captionTextMaterial);
 
-    item.linkUnderline = new Mesh(new PlaneBufferGeometry(45, 1), linkUnderlineMaterial);
+    item.linkUnderline = new Mesh(new PlaneBufferGeometry(78, 1), linkUnderlineMaterial);
     item.linkUnderline.position.set(0, -10, 0);
 
     // for raycasting so it doesn't just pick up on letters

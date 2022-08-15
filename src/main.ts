@@ -1,26 +1,41 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { Box3, Color, Group, Intersection, Texture, Vector2 } from 'three';
+import { Box3, Color, Group, Intersection, Texture } from 'three';
 import ThreeMeshUI from 'three-mesh-ui';
-import gsap from 'gsap';
 import TinyGesture from 'tinygesture';
 
-import { mode, renderer, scale, scene, stats } from './core/threejs/renderer';
-import { camera, CAMERA_POSITION, mouse, mousePerspective, raycaster } from './core/threejs/camera';
+import { mode, renderer, scene, stats } from './core/threejs/renderer';
 import {
-  textMaterial,
-  textOutlineMaterial,
-  captionTextMaterial,
-  linkUnderlineMaterial,
-} from './core/threejs/materials';
+  camera,
+  cameraViewProjectionMatrix,
+  CAMERA_POSITION,
+  frustum,
+  mouse,
+  mousePerspective,
+  raycaster,
+} from './core/threejs/camera';
+import { captionTextMaterial, linkUnderlineMaterial } from './core/threejs/materials';
 
 import { loadAssets } from './utils/assetLoader';
 import { categoriesCommonConfig } from './utils/categoriesCommonConfig';
-import { cursor, cursorSvgs, mainSvgs } from './core/dom';
+import { cursor } from './core/dom';
 import { generateConfig } from './utils/generateConfig';
 import { IItem, IObject3D, ITexturesAndFonts } from './types';
 import { createEndSection, createGenericSection, createIntroSection } from './components/category';
 import { createSectionItem } from './components/item';
+import { animateParticles, particleSystem } from './components/particles';
+
+import {
+  animateItemOpen,
+  animateItemClose,
+  animateColors,
+  animateAutoScroll,
+  animateScrollToStart,
+  stopAutoScrollAnimation,
+  animateCursor,
+  animateMoveToStart,
+  animatePerspective,
+} from './gsapAnimations';
 import { createComputer } from './components/computer';
 
 let autoScroll = {
@@ -30,7 +45,7 @@ let autoScroll = {
   scrolling: false,
   allowScrolling: true,
 };
-let stopScrollPos: number;
+let stopScrollPosition: number;
 let itemOpen: any = null;
 let itemAnimating = false;
 let origGridPos: any;
@@ -39,8 +54,13 @@ let activeCategory = 'education';
 let remainingCategories: string[] = [];
 let intersects: Intersection<IObject3D>[] = [];
 let linkIntersect: Intersection<IObject3D>[] = [];
-let whooshIntersects: Intersection<IObject3D>[] = [];
-let hoveringWhoosh: boolean;
+let goBackIntersects: Intersection<IObject3D>[] = [];
+let hoveringGoBack: boolean;
+
+const categorySections: { [key: string]: Group } = {};
+const sectionItems: { [key: string]: IItem } = {};
+const sectionItemsMeshes: any[] = [];
+const videoItems: any[] = [];
 
 const touchEnabled = 'ontouchstart' in window;
 if (touchEnabled) document.documentElement.classList.add('touch-enabled');
@@ -53,7 +73,6 @@ const texturesAndFonts: ITexturesAndFonts = {
   fonts: {},
 };
 
-// TODO: Cache assets and timeout for loader
 const categoryData = generateConfig();
 const _assets = await loadAssets(categoryData);
 _assets.forEach((asset) => {
@@ -63,73 +82,81 @@ _assets.forEach((asset) => {
     texturesAndFonts.fonts[(asset as any).data.familyName] = asset as Font;
   }
 });
+
 document.body.appendChild(renderer.domElement);
 preventPullToRefresh();
 const grid = new Group();
 scene.add(grid);
+scene.add(particleSystem);
+
 createComputer();
 
-const categorySections: { [key: string]: Group } = {};
-const sectionItems: { [key: string]: IItem } = {};
-const sectionItemsMeshes: any[] = [];
+function createPortfolio() {
+  let itemIndexTotal = 0,
+    nextCategoryPosition = 0;
 
-let itemIndexTotal = 0,
-  nextCategoryPos = 0;
+  for (const category in categoryData) {
+    const categoryGroup = new Group();
 
-for (const category in categoryData) {
-  categorySections[category] = new Group();
+    if (category === 'intro') {
+      categoryGroup.add(...createIntroSection(texturesAndFonts));
+    } else if (category === 'end') {
+      categoryGroup.add(...createEndSection(texturesAndFonts));
+    } else {
+      categoryGroup.add(...createGenericSection(category, texturesAndFonts));
 
-  if (category === 'intro') {
-    categorySections[category].add(...createIntroSection(texturesAndFonts));
-  } else if (category === 'end') {
-    categorySections[category].add(...createEndSection(texturesAndFonts));
-  } else {
-    categorySections[category].add(...createGenericSection(category, texturesAndFonts));
+      let itemIndex = 0;
+      categoryData[category].data.forEach(({ filename, ...data }) => {
+        const item = createSectionItem(
+          texturesAndFonts,
+          category,
+          { filename, ...data },
+          filename,
+          itemIndexTotal,
+          itemIndex
+        );
 
-    let itemIndex = 0;
-    categoryData[category].data.forEach(({ filename, ...data }) => {
-      const item = createSectionItem(
-        texturesAndFonts,
-        category,
-        { filename, ...data },
-        filename,
-        itemIndexTotal,
-        itemIndex
-      );
+        item.mesh.onClick = () => openItem(item);
+        sectionItems[filename] = item;
 
-      item.mesh.onClick = () => openItem(item);
-      sectionItems[filename] = item;
+        categoryGroup.add(item.group);
+        sectionItemsMeshes.push(item.mesh);
 
-      categorySections[category].add(item.group);
-      sectionItemsMeshes.push(item.mesh);
+        if (data.type === 'VIDEO') {
+          videoItems.push(item.mesh);
+        }
 
-      itemIndex++;
-      itemIndexTotal++;
-    });
-  }
+        itemIndex++;
+        itemIndexTotal++;
+      });
+    }
 
-  const bbox = new Box3().setFromObject(categorySections[category]);
+    const bbox = new Box3().setFromObject(categoryGroup);
 
-  categorySections[category].position.z = nextCategoryPos;
-  categoryPositions[category] = nextCategoryPos + 1100;
+    const categoryOffset = 1100;
+    categoryGroup.position.z = nextCategoryPosition;
+    categoryPositions[category] = nextCategoryPosition + categoryOffset;
 
-  let positionOffset = CAMERA_POSITION;
-  if (category === 'intro') positionOffset = 1700;
-  nextCategoryPos += bbox.min.z - positionOffset;
+    const customOffset = categoryData[category].positionOffset;
+    const positionOffset = customOffset ? customOffset : CAMERA_POSITION;
 
-  grid.add(categorySections[category]);
+    nextCategoryPosition += bbox.min.z - positionOffset;
 
-  if (category === 'end') {
-    stopScrollPos = categorySections[category].position.z;
+    if (category === 'end') {
+      stopScrollPosition = categoryGroup.position.z;
+    }
+
+    categorySections[category] = categoryGroup;
+    grid.add(categoryGroup);
   }
 }
 
 function openItem(item: IItem) {
-  // TODO: Repetitive code
   itemAnimating = true;
   itemOpen = item;
   origGridPos = grid.position.z;
   autoScroll.allowScrolling = false;
+  autoScroll.scrolling = false;
 
   let posOffset = categorySections[activeCategory].position.z;
 
@@ -137,200 +164,45 @@ function openItem(item: IItem) {
     posOffset = categorySections[remainingCategories[remainingCategories.length - 2]].position.z;
   }
 
-  gsap.to(item.group.position, {
-    x: 0,
-    y: 0,
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-  });
+  const onAnimationComplete = () => {
+    eyeCursorElClose();
+    itemAnimating = false;
+  };
 
-  gsap.to(item.meshGroup.rotation, {
-    y: 3.15,
-    delay: 0.7,
-    ease: 'Expo.easeInOut',
-    duration: 1,
-    onComplete: () => {
-      cursor.dataset.cursor = 'cross';
-      itemAnimating = false;
-    },
-  });
-
-  gsap.to(item.uniforms.progress, {
-    value: 1,
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-  });
-
-  gsap.to(grid.position, {
-    z: -(posOffset - -item.group.position.z) + (scale < 0.5 ? 450 : 300),
-    ease: 'Expo.easeInOut',
-    duration: 1.5,
-  });
-
-  gsap.to(textMaterial, {
-    opacity: 0,
-    ease: 'Expo.easeInOut',
-    duration: 1,
-    onComplete: () => {
-      textMaterial.visible = false;
-    },
-  });
-
-  gsap.to(captionTextMaterial, {
-    delay: 0.3,
-    opacity: 1,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-    onStart: () => {
-      captionTextMaterial.visible = true;
-    },
-  });
-
-  gsap.to(linkUnderlineMaterial, {
-    opacity: 0.4,
-    ease: 'Expo.easeInOut',
-    delay: 0.3,
-    duration: 2,
-    onStart: () => {
-      linkUnderlineMaterial.visible = true;
-    },
-  });
-
-  if (item.caption) {
-    gsap.fromTo(
-      item.caption.position,
-      { z: -100 },
-      {
-        z: 0,
-        delay: 0.2,
-        ease: 'Expo.easeInOut',
-        duration: 2,
-        onStart: () => {
-          item.caption!.visible = true;
-        },
-      }
-    );
-  }
-
-  if (item.linkGroup) {
-    gsap.fromTo(
-      item.linkGroup.position,
-      { z: -100 },
-      {
-        z: 0,
-        delay: 0.3,
-        ease: 'Expo.easeInOut',
-        duration: 2,
-        onStart: () => {
-          item.linkGroup!.visible = true;
-        },
-      }
-    );
-  }
-
-  const position = new Vector2();
-
-  for (let itemKey in sectionItems) {
-    if (sectionItems[itemKey].align === 0) position.set(-700, 700); // bottom left
-    if (sectionItems[itemKey].align === 1) position.set(700, 700); // bottom right
-    if (sectionItems[itemKey].align === 2) position.set(700, -700); // top right
-    if (sectionItems[itemKey].align === 3) position.set(-700, -700); // top left
-
-    if (sectionItems[itemKey] === item) continue;
-
-    gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
-      value: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.3,
-    });
-
-    gsap.to(sectionItems[itemKey].group.position, {
-      x: position.x,
-      y: position.y,
-      ease: 'Expo.easeInOut',
-      duration: 1.3,
-    });
-  }
+  animateItemOpen(item, onAnimationComplete, posOffset, grid, sectionItems);
 }
 
 function closeItem() {
   if (!itemAnimating && itemOpen) {
     itemAnimating = true;
-    cursor.dataset.cursor = 'pointer';
+    eyeCursorElLeave();
 
-    gsap.to(itemOpen.meshGroup.rotation, {
-      y: 0,
-      ease: 'Expo.easeInOut',
-      duration: 0.5,
-    });
+    const onGridScrollAnimationComplete = () => {
+      autoScroll.allowScrolling = true;
+      itemOpen = null;
+      itemAnimating = false;
+    };
+    const onMaterialsOpacityAnimationComplete = () => {
+      captionTextMaterial.visible = false;
+      linkUnderlineMaterial.visible = false;
+      if (itemOpen.caption) itemOpen.caption.visible = false;
+      if (itemOpen.linkGroup) itemOpen.linkGroup.visible = false;
+    };
 
-    gsap.to(itemOpen.group.position, {
-      x: itemOpen.origPos.x,
-      y: itemOpen.origPos.y,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(grid.position, {
-      z: origGridPos,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-      onComplete: () => {
-        autoScroll.allowScrolling = true;
-        itemOpen = null;
-        itemAnimating = false;
-      },
-    });
-
-    gsap.to(itemOpen.uniforms.progress, {
-      value: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-    });
-
-    gsap.to(textMaterial, {
-      opacity: 1,
-      ease: 'Expo.easeInOut',
-      duration: 1.5,
-      onStart: () => {
-        textMaterial.visible = true;
-      },
-    });
-
-    gsap.to([captionTextMaterial, linkUnderlineMaterial], {
-      opacity: 0,
-      ease: 'Expo.easeInOut',
-      duration: 1,
-      onComplete: () => {
-        captionTextMaterial.visible = false;
-        linkUnderlineMaterial.visible = false;
-        if (itemOpen.caption) itemOpen.caption.visible = false;
-        if (itemOpen.linkGroup) itemOpen.linkGroup.visible = false;
-      },
-    });
-
-    for (const itemKey in sectionItems) {
-      if (sectionItems[itemKey].active) continue;
-
-      gsap.to(sectionItems[itemKey].material.uniforms.opacity, {
-        value: 1,
-        ease: 'Expo.easeInOut',
-        duration: 1.5,
-      });
-
-      gsap.to(sectionItems[itemKey].group.position, {
-        x: sectionItems[itemKey].origPos.x,
-        y: sectionItems[itemKey].origPos.y,
-        ease: 'Expo.easeInOut',
-        duration: 1.5,
-      });
-    }
+    animateItemClose(
+      itemOpen,
+      grid,
+      origGridPos,
+      sectionItems,
+      onGridScrollAnimationComplete,
+      onMaterialsOpacityAnimationComplete
+    );
   }
 }
 
 function changeColours() {
   remainingCategories = Object.keys(categoryPositions).filter((key) => {
-    return grid.position.z > -categoryPositions[key]; // TODO: look into detecting if exists in camera
+    return grid.position.z > -categoryPositions[key];
   });
 
   if (
@@ -339,68 +211,12 @@ function changeColours() {
   ) {
     activeCategory = remainingCategories[remainingCategories.length - 1];
 
-    let bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
-    let textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
-    let tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
-    let interfaceColor: string;
+    const activeCategoryOutlineColor = categoriesCommonConfig[activeCategory].outlineTextColor;
+    const bgColor = new Color(categoriesCommonConfig[activeCategory].bgColor);
+    const textColor = new Color(categoriesCommonConfig[activeCategory].textColor);
+    const tintColor = new Color(categoriesCommonConfig[activeCategory].tintColor);
 
-    gsap.to(scene.fog!.color, {
-      r: bgColor.r,
-      g: bgColor.g,
-      b: bgColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.to(scene.background, {
-      r: bgColor.r,
-      g: bgColor.g,
-      b: bgColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.to([textMaterial.color], {
-      r: textColor.r,
-      g: textColor.g,
-      b: textColor.b,
-      ease: 'Power4.easeOut',
-      duration: 1,
-    });
-
-    gsap.set([captionTextMaterial.color, linkUnderlineMaterial.color], {
-      r: textColor.r,
-      g: textColor.g,
-      b: textColor.b,
-    });
-
-    for (let id in sectionItems) {
-      gsap.to(sectionItems[id].uniforms.gradientColor.value as Color, {
-        r: tintColor.r,
-        g: tintColor.g,
-        b: tintColor.b,
-        ease: 'Power4.easeOut',
-        duration: 1,
-      });
-    }
-
-    if (categoriesCommonConfig[activeCategory].outlineTextColor) {
-      const outlineTextColor = new Color(categoriesCommonConfig[activeCategory].outlineTextColor);
-      interfaceColor = outlineTextColor.getHexString();
-
-      gsap.to([textOutlineMaterial.color], {
-        r: outlineTextColor.r,
-        g: outlineTextColor.g,
-        b: outlineTextColor.b,
-        ease: 'Power4.easeOut',
-        duration: 1,
-      });
-    } else {
-      interfaceColor = textColor.getHexString();
-    }
-
-    gsap.to(mainSvgs, { fill: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
-    gsap.to(cursorSvgs, { stroke: `#${interfaceColor}`, ease: 'Power4.easeOut', duration: 1 });
+    animateColors(bgColor, textColor, tintColor, activeCategoryOutlineColor, sectionItems);
 
     document
       .querySelector('meta[name=theme-color]')!
@@ -414,42 +230,40 @@ function mouseDown(e: MouseEvent) {
 
   autoScroll.holdingMouseDown = true;
 
+  // Close item or item link click
   if (itemOpen) {
-    if (linkIntersect.length > 0) {
-      if (linkIntersect[0].object.onClick) linkIntersect[0].object.onClick();
-    } else {
-      closeItem();
-    }
-  } else {
-    if (intersects.length > 0) {
-      if (intersects[0].object.onClick) {
-        intersects[0].object.onClick();
-        cursor.dataset.cursor = 'cross';
-      }
-    } else if (hoveringWhoosh) {
-      autoScroll.scrolling = true;
-
-      gsap.to(autoScroll, {
-        scrollPos: 0,
-        ease: 'Expo.easeInOut',
-        duration: 4,
-      });
-    } else {
-      cursor.dataset.cursor = 'move';
-
-      gsap.to(autoScroll, {
-        delay: 0.7,
-        autoMoveSpeed: 20,
-        duration: 0.5,
-      });
-    }
+    linkIntersect.length === 0 ? closeItem() : linkIntersect[0]?.object.onClick?.();
+    return;
   }
+
+  // Open item
+  if (intersects.length > 0 && intersects[0].object.onClick) {
+    intersects[0].object.onClick();
+    eyeCursorElClose();
+
+    return;
+  }
+
+  // Back to start button
+  if (hoveringGoBack) {
+    autoScroll.scrolling = true;
+
+    const onUpdate = () => {
+      autoScroll.scrolling = true;
+    };
+
+    return animateScrollToStart(autoScroll, onUpdate);
+  }
+
+  // Autoscroll
+  eyeCursorElMove();
+  animateAutoScroll(autoScroll);
 }
 
 function mouseUp() {
-  if (!itemOpen) cursor.dataset.cursor = 'pointer';
+  if (!itemOpen) eyeCursorElLeave();
   autoScroll.holdingMouseDown = false;
-  gsap.killTweensOf(autoScroll, { autoMoveSpeed: true });
+  stopAutoScrollAnimation(autoScroll);
   autoScroll.autoMoveSpeed = 0;
 }
 
@@ -459,12 +273,7 @@ function mouseMove(e: MouseEvent) {
   updatingPerspective = true;
 
   if (!touchEnabled) {
-    gsap.to('.cursor', {
-      x: e.clientX,
-      y: e.clientY,
-      ease: 'Power4.easeOut',
-      duration: 1.5,
-    });
+    animateCursor(e.clientX, e.clientY);
   }
 
   if (!renderer || e.target !== renderer.domElement) return;
@@ -475,40 +284,42 @@ function mouseMove(e: MouseEvent) {
 
   if (!itemOpen && !autoScroll.holdingMouseDown) {
     if (activeCategory === 'end') {
-      const whooshIntersectsGroup = categorySections['end'].children.find(
+      intersects = [];
+
+      const goBackIntersectsGroup = categorySections['end'].children.find(
         ({ name }) => name === 'backToStart'
       )!;
-      whooshIntersects = raycaster.intersectObjects(whooshIntersectsGroup.children);
+      goBackIntersects = raycaster.intersectObjects(goBackIntersectsGroup.children);
 
-      if (whooshIntersects.length > 0) {
-        cursor.dataset.cursor = 'none';
-        hoveringWhoosh = true;
-        whooshIntersectsGroup.userData.arrowGsap.timeScale(2);
+      if (goBackIntersects.length > 0) {
+        eyeCursorElClick();
+        hoveringGoBack = true;
+        goBackIntersectsGroup.userData.arrowGsap.timeScale(2);
       } else {
-        if (hoveringWhoosh) {
-          cursor.dataset.cursor = 'pointer';
-          hoveringWhoosh = false;
-          whooshIntersectsGroup.userData.arrowGsap.timeScale(1);
+        if (hoveringGoBack) {
+          eyeCursorElLeave();
+          hoveringGoBack = false;
+          goBackIntersectsGroup.userData.arrowGsap.timeScale(1);
         }
       }
     } else {
       intersects = raycaster.intersectObjects(sectionItemsMeshes);
 
       if (intersects.length > 0) {
-        cursor.dataset.cursor = 'eye';
+        eyeCursorElEnter();
       } else {
-        if (cursor.dataset.cursor !== 'pointer') cursor.dataset.cursor = 'pointer';
+        if (cursor.dataset.cursor !== 'default') eyeCursorElLeave();
       }
     }
+  }
 
-    if (itemOpen && itemOpen.linkBox) {
-      linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
+  if (itemOpen && itemOpen.linkBox) {
+    linkIntersect = raycaster.intersectObject(itemOpen.linkBox);
 
-      if (linkIntersect.length > 0) {
-        cursor.dataset.cursor = 'eye';
-      } else if (cursor.dataset.cursor !== 'cross') {
-        cursor.dataset.cursor = 'cross';
-      }
+    if (linkIntersect.length > 0) {
+      eyeCursorElClick();
+    } else if (cursor.dataset.cursor !== 'cross') {
+      eyeCursorElClose();
     }
   }
 }
@@ -531,7 +342,7 @@ function initListeners() {
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
 
-  document.querySelector('.enter')?.addEventListener('click', moveToStart, false);
+  document.querySelector('.enter')?.addEventListener('click', animateMoveToStart, false);
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
@@ -547,7 +358,7 @@ function initListeners() {
   });
 
   if (!touchEnabled) {
-    cursor.dataset.cursor = 'pointer';
+    eyeCursorElLeave();
   }
 }
 
@@ -583,34 +394,55 @@ function preventPullToRefresh() {
 }
 
 function updatePerspective() {
-  gsap.to(camera.rotation, {
-    x: -mousePerspective.y * 0.5,
-    y: -mousePerspective.x * 0.5,
-    ease: 'Power4.easeOut',
-    duration: 4,
-  });
-
   const backToStart = categorySections['end'].children.find(({ name }) => name === 'backToStart')!;
   const arrow = backToStart.children.find(({ name }) => name === 'arrow')!;
+  const lastCategory = activeCategory === 'end';
 
-  if (activeCategory === 'end') {
-    gsap.to(arrow.rotation, {
-      x: -1.5 + mousePerspective.y * 0.2,
-      y: mousePerspective.x * 0.8,
-      ease: 'Power4.easeOut',
-      duration: 4,
-    });
-  }
+  animatePerspective(mousePerspective.y, mousePerspective.x, lastCategory, arrow);
 
   updatingPerspective = false;
+}
+
+function eyeCursorElMove() {
+  cursor.dataset.cursor = 'move';
+}
+
+function eyeCursorElClose() {
+  cursor.dataset.cursor = 'cross';
 }
 
 function eyeCursorElEnter() {
   cursor.dataset.cursor = 'eye';
 }
+function eyeCursorElClick() {
+  cursor.dataset.cursor = 'pointer';
+}
 
 function eyeCursorElLeave() {
-  cursor.dataset.cursor = 'pointer';
+  cursor.dataset.cursor = 'default';
+}
+
+function handleVideos() {
+  camera.updateMatrixWorld();
+  cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+  for (let i = 0; i < videoItems.length; i++) {
+    if (
+      frustum.intersectsObject(videoItems[i]) &&
+      videoItems[i].material.uniforms._texture.value.image.paused
+    ) {
+      videoItems[i].material.uniforms._texture.value.image.play();
+      continue;
+    }
+
+    if (
+      !frustum.intersectsObject(videoItems[i]) &&
+      !videoItems[i].material.uniforms._texture.value.image.paused
+    ) {
+      videoItems[i].material.uniforms._texture.value.image.pause();
+    }
+  }
 }
 
 const loop = () => {
@@ -625,12 +457,14 @@ const loop = () => {
   }
 
   // smooth scrolling
+  const delta = (autoScroll.scrollPos - grid.position.z) / 12;
   if (autoScroll.allowScrolling && autoScroll.scrolling) {
     if (autoScroll.scrollPos <= 0) autoScroll.scrollPos = 0;
-    if (autoScroll.scrollPos >= -stopScrollPos) autoScroll.scrollPos = -stopScrollPos;
+    if (autoScroll.scrollPos >= -stopScrollPosition) autoScroll.scrollPos = -stopScrollPosition;
 
-    const delta = (autoScroll.scrollPos - grid.position.z) / 12;
     grid.position.z += delta;
+
+    if (Math.abs(delta) < 8) handleVideos();
 
     changeColours();
 
@@ -641,13 +475,15 @@ const loop = () => {
     }
   }
 
-  if (hoveringWhoosh) {
+  if (hoveringGoBack) {
     const backToStart = categorySections['end'].children.find(
       ({ name }) => name === 'backToStart'
     )!;
     const circle = backToStart.children.find(({ name }) => name === 'circle')!;
     circle.rotation.z += 0.005;
   }
+
+  animateParticles(autoScroll.scrolling && autoScroll.allowScrolling, delta);
 
   if (mode === 'development') {
     stats.update();
@@ -659,31 +495,8 @@ const loop = () => {
   requestAnimationFrame(loop);
 };
 
+createPortfolio();
 loop();
 initListeners();
 initCursorListeners();
 document.body.classList.add('ready');
-
-function moveToStart() {
-  gsap.to(camera.position, {
-    y: 0,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-  });
-
-  gsap.to('.loading', {
-    y: '-100%',
-    ease: 'Expo.easeInOut',
-    duration: 2,
-    onComplete: () => {
-      (document.querySelector('.loading') as HTMLElement).style.display = 'none';
-    },
-  });
-
-  gsap.to('.social', {
-    y: 0,
-    delay: 1,
-    ease: 'Expo.easeInOut',
-    duration: 2,
-  });
-}
