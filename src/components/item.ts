@@ -133,9 +133,7 @@ function addText(mesh: Mesh, data: IData) {
 }
 
 function addCaption(item: IItem, data: IData, fonts: TFonts) {
-  if (data.caption === '' && data.link === '') return;
-
-  if (data.caption !== '') {
+  if (!!data.caption) {
     const captionGeom = new TextGeometry(data.caption, {
       font: fonts['Roboto'],
       size: 24,
@@ -150,7 +148,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     item.caption = caption;
     item.group.add(caption);
   }
-  if (data.link !== '') {
+  if (!!data.link) {
     item.linkGroup = new Group();
 
     let linkGeom = new TextGeometry('SEE MORE', {

@@ -4,26 +4,21 @@ import _merge from 'lodash.merge';
 import { IAssets, ICategoryData, IData } from '../types';
 
 export const generateConfig = (): IAssets => {
-  const generatedDataFromAssets: ICategoryData = {};
-
-  generatedDataFromAssets['intro'] = {
-    data: [],
-  };
-  generatedDataFromAssets['end'] = {
-    data: [],
+  const generatedDataFromAssets: ICategoryData = {
+    intro: { data: [] },
+    experience: { data: [] },
+    projects: { data: [] },
+    whoami: { data: [] },
+    end: { data: [] },
   };
 
   for (const category in fileData) {
     for (const filename in fileData[category]) {
       const data: IData = fileData[category][filename];
 
-      !generatedDataFromAssets[category]
-        ? (generatedDataFromAssets[category] = {
-            data: [data],
-          })
-        : (generatedDataFromAssets[category] = {
-            data: [...generatedDataFromAssets[category].data, data],
-          });
+      generatedDataFromAssets[category] = {
+        data: [...generatedDataFromAssets[category].data, data],
+      };
     }
   }
 

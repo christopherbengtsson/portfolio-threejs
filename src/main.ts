@@ -401,10 +401,6 @@ function updatePerspective() {
   updatingPerspective = false;
 }
 
-function eyeCursorElNone() {
-  cursor.dataset.cursor = 'none';
-}
-
 function eyeCursorElMove() {
   cursor.dataset.cursor = 'move';
 }

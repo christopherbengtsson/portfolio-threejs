@@ -47,11 +47,19 @@ export const categoriesCommonConfig: ICommonConfig = {
     positionOffset: 1500,
     order: 3,
   },
+  whoami: {
+    name: 'WHOAMI',
+    textColor: 0xe94b3c,
+    bgColor: 0x2d2926,
+    tintColor: 0x2d2926,
+    positionOffset: 1500,
+    order: 4,
+  },
   end: {
     textColor: 0xed859c,
     outlineTextColor: 0xb9b4e8,
     bgColor: 0x416863,
     tintColor: 0xb9b4e8,
-    order: 4,
+    order: 5,
   },
 };

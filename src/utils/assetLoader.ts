@@ -14,6 +14,8 @@ export const loadAssets = (categoryData: IAssets) => {
   for (const category in categoryData) {
     categoryData[category].data.forEach(
       ({ filepath, filename }: { filename: string; filepath: string }) => {
+        if (!filename) return;
+
         if (filename.endsWith('.mp4')) {
           const video = document.createElement('video');
           video.autoplay = false;
