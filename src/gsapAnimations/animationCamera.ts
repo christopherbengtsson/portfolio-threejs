@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { Event, Object3D } from 'three';
+import { showComputer } from '../components/computer';
 import { camera } from '../core/threejs/camera';
 
 export function animateMoveToStart() {
@@ -24,6 +25,8 @@ export function animateMoveToStart() {
     ease: 'Expo.easeInOut',
     duration: 2,
   });
+
+  showComputer();
 }
 
 export function animatePerspective(

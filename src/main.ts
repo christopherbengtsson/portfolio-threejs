@@ -36,7 +36,7 @@ import {
   animateMoveToStart,
   animatePerspective,
 } from './gsapAnimations';
-import { createComputer } from './components/computer';
+import { createComputer, sceneGroup } from './components/computer';
 
 let autoScroll = {
   holdingMouseDown: false,
@@ -73,6 +73,12 @@ const texturesAndFonts: ITexturesAndFonts = {
   fonts: {},
 };
 
+document.body.appendChild(renderer.domElement);
+preventPullToRefresh();
+const grid = new Group();
+scene.add(grid);
+
+createComputer(sectionItemsMeshes, (sceneGroup: Group) => grid.add(sceneGroup));
 const categoryData = generateConfig();
 const _assets = await loadAssets(categoryData);
 _assets.forEach((asset) => {
@@ -83,13 +89,7 @@ _assets.forEach((asset) => {
   }
 });
 
-document.body.appendChild(renderer.domElement);
-preventPullToRefresh();
-const grid = new Group();
-scene.add(grid);
 scene.add(particleSystem);
-
-createComputer();
 
 function createPortfolio() {
   let itemIndexTotal = 0,

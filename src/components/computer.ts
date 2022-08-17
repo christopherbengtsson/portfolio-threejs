@@ -1,63 +1,51 @@
-import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { Group, Mesh } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Color, Group, Mesh, Object3D, PointLight } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
-import { scene } from '../core/threejs/renderer';
+import gsap from 'gsap';
+import { initialColor } from '../utils/categoriesCommonConfig';
 
-export function createComputer() {
+export let sceneGroup: Group;
+let computerOpen = false;
+const SCRREN_CLOSED_POSITION = 1.575;
+const SCRREN_OPENED_POSITION = -0.225;
+
+export function createComputer(sectionItemsMeshes: Mesh[], callback) {
   const loader = new GLTFLoader();
+
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('src/utils/decoder/');
   loader.setDRACOLoader(dracoLoader);
-  let materials: GLTF;
 
-  //   const dracoLoader = new DRACOLoader();
-  //   dracoLoader.setDecoderPath('/examples/js/libs/draco/');
-  //   loader.setDRACOLoader(dracoLoader);
   loader.load(
-    // resource URL
-    '/mac-draco.glb',
-    // called when the resource is loaded
+    '/mac-draco._1glb.glb',
     function (gltf) {
-      const sceneGroup = gltf.scene;
-      console.log(sceneGroup);
+      sceneGroup = gltf.scene;
+      sceneGroup.position.set(0, 500, 0);
+      sceneGroup.rotateX(0.15);
+      console.log(sceneGroup.position);
 
-      const screenflip = sceneGroup.children.find(({ name }) => name === 'screenflip');
-      const base = sceneGroup.children.find(({ name }) => name === 'base');
-      const keyboard = sceneGroup.children.find(({ name }) => name === 'keyboard');
-      const touchbar = sceneGroup.children.find(({ name }) => name === 'touchbar');
+      const light = new PointLight(new Color(initialColor), 1.5);
+      light.position.set(0, 800, 50);
+      sceneGroup.add(light);
 
-      const [Cube002, Cube002_01] = base!.children;
-      const [Cube008, Cube008_1, Cube008_2] = screenflip!.children[0].children;
+      const screenflip = sceneGroup.getObjectByName('screenflip') as Object3D<Event>;
+      screenflip.rotation.set(SCRREN_CLOSED_POSITION, 0, 0);
 
-      const group = new Group();
-      group.position.set(0, -0.04, 0.41);
-      group.scale.set(100, 100, 100);
+      const meshes: Mesh[] = [];
+      let screen;
+      sceneGroup.traverse((child) => {
+        const mesh = child as Mesh;
+        if (mesh.isMesh) {
+          mesh.onClick = () => animateComputer(sceneGroup, screenflip);
+          meshes.push(mesh);
+        }
+        if (mesh.name === 'Cube008') {
+          screen = new Mesh(mesh.geometry);
+        }
+      });
+      sectionItemsMeshes.push(...meshes);
 
-      const someGroup = new Group();
-      someGroup.position.set(0, 2.96, -0.13);
-      const aluminium = new Mesh((Cube008 as Mesh).geometry, (Cube008 as Mesh).material);
-      const matte = new Mesh((Cube008_1 as Mesh).geometry, (Cube008_1 as Mesh).material);
-      const screen = new Mesh((Cube008_2 as Mesh).geometry, (Cube008_2 as Mesh).material);
-
-      someGroup.add(aluminium, matte, screen);
-      group.add(someGroup);
-
-      const keys = new Mesh((keyboard as Mesh).geometry, (keyboard as Mesh).material);
-      keys.position.set(1.79, 0, 3.45);
-      group.add(keys);
-
-      const keyboardGroup = new Group();
-      keyboardGroup.position.set(0, -0.1, 3.39);
-      keyboardGroup.add(new Mesh((Cube002 as Mesh).geometry, (Cube002 as Mesh).material)); // alu
-      keyboardGroup.add(new Mesh((Cube002_01 as Mesh).geometry, (Cube002 as Mesh).material)); // trackpad
-
-      group.add(keyboardGroup);
-
-      const touchbarMesh = new Mesh((touchbar as Mesh).geometry, (touchbar as Mesh).material);
-      touchbarMesh.position.set(0, -0.03, 1.2);
-      group.add(touchbarMesh);
-
-      scene.add(group);
+      callback(sceneGroup);
     },
     // called while loading is progressing
     function (xhr) {
@@ -68,4 +56,34 @@ export function createComputer() {
       console.log('An error happened', error);
     }
   );
+}
+
+export function showComputer() {
+  gsap.to(sceneGroup.position, {
+    y: 0,
+    delay: 1.5,
+    duration: 1.5,
+    ease: 'bounce.out',
+  });
+}
+
+function animateComputer(sceneGroup: Group, screenflip: Object3D<Event>) {
+  gsap.to(screenflip.rotation, {
+    x: computerOpen ? SCRREN_CLOSED_POSITION : SCRREN_OPENED_POSITION,
+    duration: 1.3,
+    ease: computerOpen ? 'power4.out' : 'power4.in',
+    onComplete: () => {
+      computerOpen = !computerOpen;
+    },
+  });
+
+  // gsap.to(sceneGroup.rotation, {
+  //   x: computerOpen ? 0.15 : 0.5,
+  //   duration: 1.3,
+  // });
+
+  gsap.to(sceneGroup.position, {
+    y: computerOpen ? 0 : -215,
+    duration: 1.3,
+  });
 }
