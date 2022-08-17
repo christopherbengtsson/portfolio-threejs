@@ -69,7 +69,7 @@ export const fileData: IFileData = {
       caption: 'BIO',
       text: `Christopher Bengtsson is a ${
         new Date().getFullYear() - new Date('1993-07-06').getFullYear()
-      } yo beer loving intovert from Stockholm living in Gothenburg with his girlfriend and son. He spend his free time coding stuff he never finish and he periodically work out at the gym.\n\nHe enjoy working in a smaller team, tightly with his collegues. He partically thrive when he's in the zone - when it's clear what to do and when there's a full backlog`,
+      } yo beer loving introvert from Stockholm living in Gothenburg with his girlfriend and son. He spends his free time coding stuff he never finish and he periodically work out at the gym.\n\nHe enjoy working in a smaller team, tightly with his colleagues. He partically thrive when he's in the zone - when it's clear what to do and when there's a full backlog`,
     },
   },
 };

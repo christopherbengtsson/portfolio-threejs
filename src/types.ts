@@ -73,7 +73,7 @@ export interface IFileData {
       filepath: string;
       text?: string;
       caption: string;
-      link: string;
+      link?: string;
     };
   };
 }
@@ -84,7 +84,7 @@ export interface IData {
   filename: string;
   text?: string;
   caption: string;
-  link: string;
+  link?: string;
 }
 export interface ICategoryData {
   [key: string]: {
