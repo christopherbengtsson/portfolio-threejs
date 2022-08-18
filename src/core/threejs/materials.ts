@@ -5,7 +5,6 @@ export const textMaterial = new MeshBasicMaterial({ color: initialColor, transpa
 export const textOutlineMaterial = new MeshBasicMaterial({
   color: initialColor,
   transparent: true,
-  wireframe: true,
 });
 export const captionTextMaterial = new MeshBasicMaterial({
   color: initialColor,
