@@ -1,16 +1,4 @@
-import {
-  AddOperation,
-  BackSide,
-  DoubleSide,
-  FrontSide,
-  Group,
-  Mesh,
-  MeshPhongMaterial,
-  MixOperation,
-  MultiplyOperation,
-  SpotLight,
-  TorusKnotGeometry,
-} from 'three';
+import { Group, Mesh, MeshPhongMaterial, SpotLight, TorusKnotGeometry } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { textMaterial, textOutlineMaterial } from '../core/threejs/materials';
 import { ITexturesAndFonts } from '../types';
