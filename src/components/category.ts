@@ -6,28 +6,28 @@ import { categoriesCommonConfig, initialColor } from '../utils/categoriesCommonC
 import { createBackToStartBtn } from './backToStart';
 
 export function createIntroSection({ fonts }: ITexturesAndFonts) {
-  const introSmallTextGeometry = new TextGeometry('Christopher Bengtsson', {
+  const introBigTextGeometry = new TextGeometry('Christopher Bengtsson', {
     font: fonts['Roboto'],
     size: 80,
     height: 0,
     curveSegments: 10,
   }).center();
 
-  const intro = new Mesh(introSmallTextGeometry, textMaterial);
+  const introText = new Mesh(introBigTextGeometry, textMaterial);
 
-  const introBigTextGeometry = new TextGeometry('"portfolio"', {
+  const introSmallTextGeometry = new TextGeometry('"portfolio"', {
     font: fonts['Roboto'],
     size: 60,
     height: 0,
     curveSegments: 4,
   }).center();
 
-  const subIntroText = new Mesh(introBigTextGeometry, textOutlineMaterial);
+  const subIntroText = new Mesh(introSmallTextGeometry, textOutlineMaterial);
   subIntroText.position.set(0, -100, -150);
 
   const torusGroup = new Group();
   const geometry = new TorusKnotGeometry(500, 100, 400, 200);
-  const material = new MeshPhongMaterial({ color: initialColor });
+  const material = new MeshPhongMaterial({ color: initialColor, transparent: true, opacity: 0 });
   const torusKnot = new Mesh(geometry, material);
   torusKnot.position.set(0, 0, -500);
 
@@ -40,9 +40,9 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const rightLight = new SpotLight();
   rightLight.position.set(200, -0, -500);
 
-  torusGroup.add(subIntroText, torusKnot, upperLight, lowerLight, rightLight);
+  torusGroup.add(torusKnot, upperLight, lowerLight, rightLight);
 
-  return [intro, torusGroup];
+  return [introText, subIntroText, torusGroup];
 }
 export function createEndSection({ fonts }: ITexturesAndFonts) {
   const endTextGeometry = new TextGeometry("Yep, that's it", {

@@ -1,8 +1,14 @@
 import gsap from 'gsap';
-import { Event, Object3D } from 'three';
+import { Event, Mesh, Object3D } from 'three';
 import { camera } from '../core/threejs/camera';
 
-export function animateMoveToStart() {
+export function animateMoveToStart(torusMesh: Mesh) {
+  gsap.to(torusMesh.material, {
+    opacity: 1,
+    ease: 'Expo.easeInOut',
+    duration: 2,
+  });
+
   gsap.to(camera.position, {
     y: 0,
     ease: 'Expo.easeInOut',

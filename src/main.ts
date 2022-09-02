@@ -1,6 +1,6 @@
 import './style.scss';
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js';
-import { Box3, Color, Group, Intersection, Texture } from 'three';
+import { Box3, Color, Group, Intersection, Mesh, Texture } from 'three';
 import ThreeMeshUI from 'three-mesh-ui';
 import TinyGesture from 'tinygesture';
 
@@ -55,6 +55,7 @@ let intersects: Intersection<IObject3D>[] = [];
 let linkIntersect: Intersection<IObject3D>[] = [];
 let goBackIntersects: Intersection<IObject3D>[] = [];
 let hoveringGoBack: boolean;
+let torusMesh: Mesh;
 
 const categorySections: { [key: string]: Group } = {};
 const sectionItems: { [key: string]: IItem } = {};
@@ -97,7 +98,9 @@ function createPortfolio() {
     const categoryGroup = new Group();
 
     if (category === 'intro') {
-      categoryGroup.add(...createIntroSection(texturesAndFonts));
+      const [introText, subIntroText, torusGroup] = createIntroSection(texturesAndFonts);
+      torusMesh = torusGroup.children.find(({ type }) => type === 'Mesh') as Mesh;
+      categoryGroup.add(introText, subIntroText, torusGroup);
     } else if (category === 'end') {
       categoryGroup.add(...createEndSection(texturesAndFonts));
     } else {
@@ -340,7 +343,13 @@ function initListeners() {
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
 
-  document.querySelector('.enter')?.addEventListener('click', animateMoveToStart, false);
+  document.querySelector('.enter')?.addEventListener(
+    'click',
+    (_ev) => {
+      animateMoveToStart(torusMesh);
+    },
+    false
+  );
 
   const gesture = new TinyGesture(renderer.domElement);
   gesture.on('panmove', (_e) => {
