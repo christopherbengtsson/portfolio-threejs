@@ -76,7 +76,7 @@ export const fileData: IFileData = {
       type: 'IMAGE',
       filepath: rolex,
       caption: 'Weakness for vintage',
-      text: "Christopher's love for watches started when he graduated from high school where he was gifted his great-grandfathers old Omega from the 1950s. His dream watch in the picture is a rare Rolex Explorer 1016 'Space-Dweller'.",
+      text: "Christopher's love for watches started when he graduated from high school where he was gifted his great-grandfathers old Omega from the 1950s. His grail in the picture is a rare Rolex Explorer 1016 'Space-Dweller'.",
       filename: extractFilename(rolex),
       link: 'https://www.hodinkee.com/articles/bring-a-loupe-august-12-2016',
     },
