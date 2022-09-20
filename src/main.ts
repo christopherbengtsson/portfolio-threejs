@@ -343,9 +343,10 @@ function initListeners() {
   renderer.domElement.addEventListener('mouseup', mouseUp, false);
   renderer.domElement.addEventListener('wheel', scroll, false);
 
-  document.querySelector('.enter')?.addEventListener(
+  document.getElementById('enter')?.addEventListener(
     'click',
     (_ev) => {
+      eyeCursorElLeave();
       animateMoveToStart(torusMesh);
     },
     false
@@ -371,6 +372,10 @@ function initListeners() {
 
 function initCursorListeners() {
   window.addEventListener('mousemove', mouseMove, false);
+
+  const enter = document.getElementById('enter');
+  enter?.addEventListener('mouseenter', eyeCursorElClick, false);
+  enter?.addEventListener('mouseleave', eyeCursorElLeave, false);
 
   let eyeCursorEls = document.querySelectorAll('.cursor-eye');
   for (let i = 0; i < eyeCursorEls.length; i++) {
