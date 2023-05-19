@@ -53,7 +53,7 @@
             <li>
               <h2>Trustly</h2>
               <h3 id="caption_trustly">Software engineer 2020 - present</h3>
-              <p id="text_trustly">Christopher is currently working at Trustly using technologies such as React, Spring, AWS and K8s with a microfrontends and microservices architecture.</p>
+              <p id="text_trustly">Christopher is presently employed at Trustly, where he applies various cutting-edge technologies like React, Spring, AWS, and K8s to develop a sophisticated microfrontends and microservices architecture.</p>
               <a id="link_trustly" href="https://trustly.net" target="_blank">Read more</a>
             </li>
           </article>
@@ -61,9 +61,9 @@
             <li>
               <h2>Relight</h2>
               <h3 id="caption_relight">Software developer 2018 - 2020</h3>
-              <p id="text_relight">Christopher was consulting as a frontend/process developer at Relight, integrating process-automation and low-code platforms such as K2 and OutSystems with technologies like Angular, SQL server and C#. 
+              <p id="text_relight">Christopher served as a frontend/process developer consultant at Relight, where he specialized in integrating process-automation and low-code platforms like K2 and OutSystems. His work involved utilizing technologies such as Angular, SQL Server, and C#. 
                 
-                Relight was a subsidiary company to Headlight before being acquired by HiQ.</p>
+                It is worth noting that Relight was originally a subsidiary of Headlight but was later acquired by HiQ.</p>
               <a id="link_relight" href="https://relight.se" target="_blank">Read more</a>
             </li>
           </article>
@@ -71,7 +71,7 @@
             <li>
               <h2>Headlight</h2>
               <h3 id="caption_headlight">Software developer 2017 - 2018</h3>
-              <p id="text_headlight">On Christopher's last semester at the university he had an internship on a consultant firm called Headlight where he was developing a mobile app using Ionic and Cordova along with two other classmates. After 6 months and a graduation his internship turned into his first full-time job as a software developer.</p>
+              <p id="text_headlight">During Christopher's final semester at the university, he embarked on an internship at a consultancy firm named Headlight. Together with two fellow classmates, he worked on developing a mobile app using Ionic and Cordova. Following a successful six-month internship and his subsequent graduation, Christopher's internship transformed into his inaugural role as a full-time software developer.</p>
               <a
                 id="link_headlight"
                 href="ttps://news.cision.com/hiq-international/r/hiq-acquires-headlight-group,c3326314"
@@ -84,9 +84,9 @@
             <li>
               <h2>Örebro University</h2>
               <h3 id="caption_oru">Informatics Science 2014 - 2017</h3>
-              <p id="text_oru">Christopher moved from Stockholm to Örebro and studied Informatics Science for 3 years. The technical part of the program was C# and .NET heavy but it also covered Java, SQL, HTML/CSS and, lo and behold, JQuery (yes, not just vanilla JS...). The other part of the program included stuff like agile methods, modeling languages and interaction design.
+              <p id="text_oru">Christopher relocated from Stockholm to Örebro to pursue a three-year degree in Informatics Science. The technical aspect of the program predominantly focused on C# and .NET, while also encompassing Java, SQL, HTML/CSS, and even delving into the realm of JQuery (yes, not just vanilla JS...). Additionally, the program covered topics such as agile methods, modeling languages, and interaction design.
                 
-                In parallell to his studies he worked at a fashion store called Volt.</p>
+                Simultaneously, Christopher held a position at a fashion store called Volt while pursuing his studies.</p>
               <a
                 id="link_oru"
                 href="https://www.oru.se/utbildning/program/systemvetenskapliga-programmet/"
@@ -129,13 +129,13 @@
           <article>
             <li>
               <h2 id="caption_bio">Bio</h2>
-              <p id="text_bio">Christopher Bengtsson is a <span id="age">29</span> yo beer loving introvert from Stockholm living in Gothenburg with his girlfriend and son. He spends his free time coding stuff he never finish, looking at watches he can't afford and periodically work out at the gym. He enjoy working in a smaller team, tightly with his colleagues. He partically thrive when he's in the zone - when it's clear what to do and when there's a full backlog.</p>
+              <p id="text_bio">Christopher Bengtsson is a <span id="age">29</span>-year-old beer loving introvert from Stockholm living in Gothenburg with his girlfriend and son. He spends his free time coding stuff he never finish, looking at watches he can't afford and periodically work out at the gym. He enjoy working in a smaller team, tightly with his colleagues. He partically thrive when he's in the zone - when it's clear what to do and when there's a full backlog.</p>
             </li>
           </article>
           <article>
             <li>
               <h2 id="caption_watches">Weakness for vintage</h2>
-              <p id="text_watches">Christopher's love for watches started when he graduated from high school, where he was gifted his great-grandfathers old Omega from the 1950s. His grail in the picture is a rare Rolex Explorer 1016 'Space-Dweller'.</p>
+              <p id="text_watches">Christopher's passion for watches ignited upon his high school graduation when he received a sentimental gift: his great-grandfather's vintage Omega timepiece dating back to the 1950s. Since then, his fascination with horology has grown. One particular watch that holds an esteemed position in his aspirations is the elusive Rolex Explorer 1016 'Space-Dweller', a rare gem he considers his ultimate dream watch.</p>
               <a
                 id="link_watches"
                 href="https://www.hodinkee.com/articles/bring-a-loupe-august-12-2016"
@@ -257,7 +257,9 @@
     </script>
     <script>
       const ageSpan = document.getElementById('age');
-      ageSpan.textContent = new Date().getFullYear() - new Date('1993-07-06').getFullYear();
+      const timeDiff = new Date().getTime() - new Date('1993-07-06').getTime();
+      const ageDate = new Date(timeDiff);
+      ageSpan.textContent = Math.abs(ageDate.getUTCFullYear() - 1970);
     </script>
     <noscript>
       <style type="text/css">
