@@ -1,5 +1,5 @@
 import gsap from 'gsap';
-import { Event, Mesh, Object3D } from 'three';
+import { Mesh, Object3D, Object3DEventMap } from 'three';
 import { camera } from '../core/threejs/camera';
 
 export function animateMoveToStart(torusMesh: Mesh) {
@@ -36,7 +36,7 @@ export function animatePerspective(
   mousePerspectiveY: number,
   mousePerspectiveX: number,
   lastCategory: boolean,
-  arrow: Object3D<Event>
+  arrow: Object3D<Object3DEventMap>
 ) {
   gsap.to(camera.rotation, {
     x: -mousePerspectiveY * 0.5,
