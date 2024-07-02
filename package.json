@@ -22,7 +22,7 @@
     "gsap": "^3.12.5",
     "lodash.merge": "^4.6.2",
     "thr": "^0.0.6",
-    "three": "^0.152.0",
+    "three": "^0.155.0",
     "three-mesh-ui": "^6.5.4",
     "tinygesture": "^3.0.0"
   }
