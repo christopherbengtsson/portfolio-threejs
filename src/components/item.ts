@@ -66,13 +66,14 @@ export function createSectionItem(
     }
   };
 
-  const align = itemIndexTotal % 4;
+  const align = itemIndexTotal % 5;
   const pos = new Vector2();
 
-  if (align === 0) pos.set(-350, 350); // bottom left
-  if (align === 1) pos.set(350, 350); // bottom right
-  if (align === 2) pos.set(350, -350); // top right
-  if (align === 3) pos.set(-350, -350); // top left
+  if (align === 0) pos.set(-350, 350); // top left
+  if (align === 1) pos.set(350, -350); // bottom right
+  if (align === 2) pos.set(350, 350); // top right
+  if (align === 3) pos.set(-350, -350); // bottom left
+  if (align === 4) pos.set(-350, 350); // top right
 
   const origPos = new Vector2(pos.x, pos.y);
 
