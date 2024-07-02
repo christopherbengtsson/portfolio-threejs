@@ -60,7 +60,7 @@ export function animateParticles(isScrolling: boolean, delta: number) {
   if (isScrolling) particleSystem.rotation.z -= delta / 10000;
 
   const time = (Date.now() * 0.005) / 2;
-  const sizes = particleSystem.geometry.attributes.size.array as Array<number>;
+  const sizes = particleSystem.geometry.attributes.size.array as unknown as Array<number>;
 
   for (let i = 0; i < particles; i++) {
     sizes[i] = 5 * (1 + Math.sin(0.1 * i + time));

@@ -1,4 +1,4 @@
-import { Group, Mesh, MeshPhongMaterial, SpotLight, TorusKnotGeometry } from 'three';
+import { Color, Group, Mesh, MeshPhongMaterial, SpotLight, TorusKnotGeometry } from 'three';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { textMaterial, textOutlineMaterial } from '../core/threejs/materials';
 import { ITexturesAndFonts } from '../types';
@@ -9,7 +9,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introBigTextGeometry = new TextGeometry('Christopher Bengtsson', {
     font: fonts['Roboto'],
     size: 80,
-    height: 0,
+    depth: 0,
     curveSegments: 10,
   }).center();
 
@@ -18,7 +18,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('"portfolio"', {
     font: fonts['Roboto'],
     size: 60,
-    height: 0,
+    depth: 0,
     curveSegments: 4,
   }).center();
 
@@ -31,13 +31,13 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const torusKnot = new Mesh(geometry, material);
   torusKnot.position.set(0, 0, -500);
 
-  const upperLight = new SpotLight();
+  const upperLight = new SpotLight(new Color(), 100_000);
   upperLight.position.set(0, 200, -700);
 
-  const lowerLight = new SpotLight();
+  const lowerLight = new SpotLight(new Color(), 100_000);
   lowerLight.position.set(0, -200, -200);
 
-  const rightLight = new SpotLight();
+  const rightLight = new SpotLight(new Color(), 100_000);
   rightLight.position.set(200, -0, -500);
 
   torusGroup.add(torusKnot, upperLight, lowerLight, rightLight);
@@ -48,7 +48,7 @@ export function createEndSection({ fonts }: ITexturesAndFonts) {
   const endTextGeometry = new TextGeometry("Yep, that's it", {
     font: fonts['Roboto'],
     size: 200,
-    height: 0,
+    depth: 0,
     curveSegments: 4,
   }).center();
 
@@ -63,7 +63,7 @@ export function createGenericSection(category: string, { fonts }: ITexturesAndFo
   const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
     font: fonts['Roboto'],
     size: 200,
-    height: 0,
+    depth: 0,
     curveSegments: 10,
   }).center();
 

@@ -1,5 +1,6 @@
 import { IFileData } from '../types';
 
+import visionite from '../../assets/experience/visionite.png';
 import trustly from '../../assets/experience/trustly.png';
 import relight from '../../assets/experience/relight.png';
 import headlight from '../../assets/experience/headlight.png';
@@ -16,6 +17,14 @@ const linkById = (id: string) => document.getElementById(id)?.getAttribute('href
 
 export const fileData: IFileData = {
   experience: {
+    [extractFilename(visionite)]: {
+      type: 'IMAGE',
+      filepath: visionite,
+      filename: extractFilename(visionite),
+      text: elById('text_visionite'),
+      caption: elById('caption_visionite'),
+      link: linkById('link_visionite'),
+    },
     [extractFilename(trustly)]: {
       type: 'IMAGE',
       filepath: trustly,

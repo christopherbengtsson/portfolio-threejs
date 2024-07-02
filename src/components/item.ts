@@ -4,7 +4,6 @@ import {
   Group,
   Mesh,
   MeshBasicMaterial,
-  PlaneBufferGeometry,
   PlaneGeometry,
   ShaderMaterial,
   Vector2,
@@ -33,15 +32,17 @@ export function createSectionItem(
   itemIndex: number
 ) {
   const { textures, fonts } = texturesAndFonts;
+
+  // Colors need to be converted to linear after threejs 0.152.0 since my shaders expects that when performing color mixing and blending operations
   const uniforms = {
     time: { type: 'f', value: 1.0 },
-    fogColor: { type: 'c', value: (scene.fog as Fog).color },
+    fogColor: { type: 'c', value: new Color((scene.fog as Fog).color).convertSRGBToLinear() },
     fogNear: { type: 'f', value: (scene.fog as Fog).near },
     fogFar: { type: 'f', value: (scene.fog as Fog).far },
     _texture: { type: 't', value: textures[filename] },
     opacity: { type: 'f', value: 1.0 },
     progress: { type: 'f', value: 0.0 },
-    gradientColor: { type: 'vec3', value: new Color(initialColor) },
+    gradientColor: { type: 'vec3', value: new Color(initialColor).convertSRGBToLinear() },
   };
   const geometry = new PlaneGeometry(1, 1);
   const material = new ShaderMaterial({
@@ -53,6 +54,7 @@ export function createSectionItem(
   material.fog = true;
 
   const mesh = new Mesh(geometry, material);
+
   mesh.scale.set(textures[filename].userData.size!.x, textures[filename].userData.size!.y, 1);
 
   textures[filename].onUpdate = () => {
@@ -64,13 +66,14 @@ export function createSectionItem(
     }
   };
 
-  const align = itemIndexTotal % 4;
+  const align = itemIndexTotal % 5;
   const pos = new Vector2();
 
-  if (align === 0) pos.set(-350, 350); // bottom left
-  if (align === 1) pos.set(350, 350); // bottom right
-  if (align === 2) pos.set(350, -350); // top right
-  if (align === 3) pos.set(-350, -350); // top left
+  if (align === 0) pos.set(-350, 350); // top left
+  if (align === 1) pos.set(350, -350); // bottom right
+  if (align === 2) pos.set(350, 350); // top right
+  if (align === 3) pos.set(-350, -350); // bottom left
+  if (align === 4) pos.set(-350, 350); // top right
 
   const origPos = new Vector2(pos.x, pos.y);
 
@@ -137,7 +140,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     const captionGeom = new TextGeometry(data.caption, {
       font: fonts['Roboto'],
       size: 24,
-      height: 0,
+      depth: 0,
       curveSegments: 6,
     }).center();
 
@@ -154,18 +157,18 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     let linkGeom = new TextGeometry('SEE MORE', {
       font: fonts['Roboto'],
       size: 12,
-      height: 0,
+      depth: 0,
       curveSegments: 6,
     }).center();
 
     item.link = new Mesh(linkGeom, captionTextMaterial);
 
-    item.linkUnderline = new Mesh(new PlaneBufferGeometry(78, 1), linkUnderlineMaterial);
+    item.linkUnderline = new Mesh(new PlaneGeometry(78, 1), linkUnderlineMaterial);
     item.linkUnderline.position.set(0, -10, 0);
 
     // for raycasting so it doesn't just pick up on letters
     item.linkBox = new Mesh(
-      new PlaneBufferGeometry(70, 20),
+      new PlaneGeometry(70, 20),
       new MeshBasicMaterial({ alphaTest: 0, visible: false })
     );
     item.linkBox.onClick = () => {

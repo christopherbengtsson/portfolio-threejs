@@ -7,11 +7,12 @@ import {
   Mesh,
   Vector2,
   Group,
+  Object3DEventMap,
 } from 'three';
 import { Font } from 'three/examples/jsm/loaders/FontLoader';
 
 type onClick = () => void;
-export interface IObject3D extends Object3D<Event> {
+export interface IObject3D extends Object3D<Object3DEventMap> {
   onClick?: onClick;
 }
 interface IUniform {
@@ -21,7 +22,7 @@ interface IUniform {
 interface IMesh extends Mesh {
   onClick?: onClick;
 }
-export interface IItem extends Partial<Object3D<Event>> {
+export interface IItem extends Partial<Object3D<Object3DEventMap>> {
   geometry: PlaneGeometry;
   material: ShaderMaterial;
   mesh: IMesh;
