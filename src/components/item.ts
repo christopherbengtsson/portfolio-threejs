@@ -139,7 +139,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     const captionGeom = new TextGeometry(data.caption, {
       font: fonts['Roboto'],
       size: 24,
-      height: 0,
+      depth: 0,
       curveSegments: 6,
     }).center();
 
@@ -156,7 +156,7 @@ function addCaption(item: IItem, data: IData, fonts: TFonts) {
     let linkGeom = new TextGeometry('SEE MORE', {
       font: fonts['Roboto'],
       size: 12,
-      height: 0,
+      depth: 0,
       curveSegments: 6,
     }).center();
 

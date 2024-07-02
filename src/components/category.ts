@@ -9,7 +9,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introBigTextGeometry = new TextGeometry('Christopher Bengtsson', {
     font: fonts['Roboto'],
     size: 80,
-    height: 0,
+    depth: 0,
     curveSegments: 10,
   }).center();
 
@@ -18,7 +18,7 @@ export function createIntroSection({ fonts }: ITexturesAndFonts) {
   const introSmallTextGeometry = new TextGeometry('"portfolio"', {
     font: fonts['Roboto'],
     size: 60,
-    height: 0,
+    depth: 0,
     curveSegments: 4,
   }).center();
 
@@ -48,7 +48,7 @@ export function createEndSection({ fonts }: ITexturesAndFonts) {
   const endTextGeometry = new TextGeometry("Yep, that's it", {
     font: fonts['Roboto'],
     size: 200,
-    height: 0,
+    depth: 0,
     curveSegments: 4,
   }).center();
 
@@ -63,7 +63,7 @@ export function createGenericSection(category: string, { fonts }: ITexturesAndFo
   const textGeometry = new TextGeometry(categoriesCommonConfig[category].name!, {
     font: fonts['Roboto'],
     size: 200,
-    height: 0,
+    depth: 0,
     curveSegments: 10,
   }).center();
 

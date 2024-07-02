@@ -9,7 +9,7 @@ export function createLinks(fonts: TFonts) {
   const linkGeom = new TextGeometry('SEE MORE', {
     font: fonts['SuisseIntl-Bold'],
     size: 6,
-    height: 0,
+    depth: 0,
     curveSegments: 4,
   }).center();
 

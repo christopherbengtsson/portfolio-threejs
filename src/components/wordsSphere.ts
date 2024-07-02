@@ -46,7 +46,7 @@ function getWord(pos: Vector3, word: string, font: Font) {
   const textGeometry = new TextGeometry(word, {
     font,
     size: 12,
-    height: 0,
+    depth: 0,
     curveSegments: 5,
   });
 
