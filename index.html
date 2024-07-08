@@ -176,8 +176,6 @@
       </div>
     </main>
     <div class="loading">
-      <h1 id="loading-joke"></h1>
-
       <div class="progress">
         <div class="progress-percent">0%</div>
         <div class="progress-circle">
@@ -255,20 +253,12 @@
     <script type="module" src="/src/main.ts"></script>
 
     <script>
-      fetch('https://icanhazdadjoke.com/', { headers: { Accept: 'application/json' } })
-        .then((data) => data.json())
-        .then(({ joke }) => {
-          const el = document.getElementById('loading-joke');
-          if (el) el.textContent = joke;
-        })
-        .catch((e) => console.error('No dad joke today', e));
-    </script>
-    <script>
       const ageSpan = document.getElementById('age');
       const timeDiff = new Date().getTime() - new Date('1993-07-06').getTime();
       const ageDate = new Date(timeDiff);
       ageSpan.textContent = Math.abs(ageDate.getUTCFullYear() - 1970);
     </script>
+
     <noscript>
       <style type="text/css">
         .loading,
